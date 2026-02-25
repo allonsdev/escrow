@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Order Detail</title>
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+
+<div class="container mt-4">
+
+  <h2>Order Detail</h2>
+
+  <p><strong>Status:</strong> {{ order.status }}</p>
+  <p><strong>Product:</strong> {{ order.product.name }}</p>
+  <p><strong>Amount:</strong> {{ order.total_price }} {{ order.currency }}</p>
+  <p><strong>Buyer:</strong> {{ order.buyer.username }}</p>
+  <p><strong>Seller:</strong> {{ order.seller.username }}</p>
+
+  <hr>
+
+  <!-- FUND ESCROW -->
+  {% if order.status == "escrow_created" %}
+    <form method="post" action="{% url 'fund_escrow' order.escrowtransaction.id %}">
+      {% csrf_token %}
+      <button class="btn btn-success">Fund Escrow</button>
+    </form>
+  {% endif %}
+
+  <!-- MARK SHIPPED -->
+  {% if order.status == "paid" and request.user == order.seller %}
+    <form method="post" action="{% url 'mark_shipped' order.id %}">
+      {% csrf_token %}
+      <button class="btn btn-warning">Mark as Shipped</button>
+    </form>
+  {% endif %}
+
+  <!-- CONFIRM DELIVERY -->
+  {% if order.status == "shipped" and request.user == order.buyer %}
+    <form method="post" action="{% url 'confirm_delivery' order.escrowtransaction.id %}">
+      {% csrf_token %}
+      <button class="btn btn-primary">Confirm Delivery</button>
+    </form>
+  {% endif %}
+
+  <hr>
+
+  <a href="{% url 'raise_dispute' order.escrowtransaction.id %}"
+     class="btn btn-danger">
+     Raise Dispute
+  </a>
+
+</div>
+
+</body>
+</html>

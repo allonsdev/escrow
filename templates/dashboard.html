@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Analytics Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Analytics Dashboard</a>
+  </div>
+</nav>
+
+<div class="container mt-4">
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Total Users</h5>
+                <h2>{{ total_users }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Verified Users</h5>
+                <h2>{{ verified_users }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Flagged Users</h5>
+                <h2>{{ flagged_users }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Avg Trust Score</h5>
+                <h2>{{ avg_trust|floatformat:2 }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Total Products</h5>
+                <h2>{{ total_products }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Active Products</h5>
+                <h2>{{ active_products }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Total Orders</h5>
+                <h2>{{ total_orders }}</h2>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3">
+                <h5>Completed Orders</h5>
+                <h2>{{ completed_orders }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-4">
+            <canvas id="orderChart"></canvas>
+        </div>
+        <div class="col-md-4">
+            <canvas id="disputeChart"></canvas>
+        </div>
+        <div class="col-md-4">
+            <canvas id="fraudChart"></canvas>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="row">
+        <div class="col-md-12">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Orders pie
+    new Chart(document.getElementById('orderChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Completed', 'Pending'],
+            datasets: [{
+                data: [{{ completed_orders }}, {{ pending_orders }}]
+            }]
+        }
+    });
+
+    // Disputes bar
+    new Chart(document.getElementById('disputeChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Open', 'Resolved'],
+            datasets: [{
+                label: 'Disputes',
+                data: [{{ open_disputes }}, {{ resolved_disputes }}]
+            }]
+        }
+    });
+
+    // Fraud doughnut
+    new Chart(document.getElementById('fraudChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Avg User Fraud', 'Avg Escrow Fraud'],
+            datasets: [{
+                data: [{{ avg_fraud_user }}, {{ avg_fraud_escrow }}]
+            }]
+        }
+    });
+
+    // Trend line
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels|safe }},
+            datasets: [
+                {
+                    label: 'Orders',
+                    data: {{ order_trend|safe }}
+                },
+                {
+                    label: 'Disputes',
+                    data: {{ dispute_trend|safe }}
+                }
+            ]
+        }
+    });
+</script>
+
+</body>
+</html>
