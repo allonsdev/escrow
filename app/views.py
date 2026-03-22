@@ -5,6 +5,10 @@ from app.services.notification_service import NotificationService
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render
 from django.db.models import Sum, Avg, Count
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib import messages
+from decimal import Decimal
 
 from .models import (
     Order,
@@ -35,10 +39,41 @@ from .services.blockchain_service import BlockchainService
 from .models import *
 
 
+
+
 from django.db.models import Avg, Count
 from django.utils import timezone
 from datetime import timedelta
 
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Order, UserWallet
+
+
+@login_required
+def wallet(request):
+
+    user = request.user
+
+    wallet = UserWallet.objects.filter(user=user).first()
+
+    purchases = Order.objects.filter(buyer=user).select_related(
+        "product", "seller"
+    ).order_by("-created_at")
+
+    sales = Order.objects.filter(seller=user).select_related(
+        "product", "buyer"
+    ).order_by("-created_at")
+
+    context = {
+        "wallet": wallet,
+        "purchases": purchases,
+        "sales": sales,
+    }
+
+    return render(request, "wallet.html", context)
 def analytics_dashboard(request):
     # USERS
     total_users = User.objects.count()
@@ -93,6 +128,24 @@ def analytics_dashboard(request):
     trend_labels.reverse()
     order_trend.reverse()
     dispute_trend.reverse()
+# ADD TABLE DATA (LIMIT TO 50 FOR PERFORMANCE)
+    recent_escrows = EscrowTransaction.objects.select_related(
+        "buyer", "seller"
+    ).order_by("-created_at")[:50]
+
+    recent_payments = Payment.objects.select_related(
+        "transaction", "payer"
+    ).order_by("-created_at")[:50]
+
+    recent_logs = LogTrail.objects.select_related(
+        "user", "related_transaction"
+    ).order_by("-created_at")[:50]
+
+    recent_visits = SiteVisit.objects.select_related(
+        "user"
+    ).order_by("-visited_at")[:50]
+
+    # ADD TO CONTEXT
 
     return render(request, "dashboard.html", {
         # USERS
@@ -137,6 +190,10 @@ def analytics_dashboard(request):
         "trend_labels": trend_labels,
         "order_trend": order_trend,
         "dispute_trend": dispute_trend,
+        "recent_escrows": recent_escrows,
+"recent_payments": recent_payments,
+"recent_logs": recent_logs,
+"recent_visits": recent_visits,
     })
 
 def raise_dispute(request, escrow_id):
@@ -153,24 +210,78 @@ def raise_dispute(request, escrow_id):
         escrow.status = "disputed"
         escrow.save()
 
+        messages.warning(request, "Dispute opened successfully.")
+
+        send_mail(
+            subject="Dispute Opened",
+            message=f"A dispute was opened for Order #{escrow.order.id}.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[escrow.buyer.email, escrow.seller.email],
+            fail_silently=True,
+        )
+
         return redirect("order_detail", escrow.order.id)
 
     return render(request, "dispute.html")
 
+
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
+from decimal import Decimal
+
+
+# FUND ESCROW
 def fund_escrow(request, escrow_id):
-    escrow = EscrowTransaction.objects.get(id=escrow_id)
+
+    escrow = get_object_or_404(EscrowTransaction, id=escrow_id)
 
     if request.method == "POST":
 
-        receipt = BlockchainService.deposit(
-            escrow_id=escrow.blockchain_escrow_id,
-            from_address = BlockchainService.checksum(
-    request.user.userwallet.wallet_address),
-            amount_eth=float(escrow.amount)
-        )
-        
-        print(request.user.userwallet.wallet_address)
+        # Prevent double funding
+        if escrow.status == "paid":
+            messages.error(request, "Escrow already funded.")
+            return redirect("order_detail", escrow.order.id)
 
+        buyer_wallet = escrow.buyer.userwallet
+
+        # Check wallet balance
+        if Decimal(buyer_wallet.balance_snapshot) < Decimal(escrow.amount):
+
+            messages.error(
+                request,
+                "Insufficient wallet balance to fund escrow."
+            )
+
+            return redirect("order_detail", escrow.order.id)
+
+        try:
+
+            receipt = BlockchainService.deposit(
+                escrow_id=escrow.blockchain_escrow_id,
+                from_address=BlockchainService.checksum(
+                    request.user.userwallet.wallet_address
+                ),
+                amount_eth=float(escrow.amount)
+            )
+
+        except Exception as e:
+
+            if "insufficient funds" in str(e).lower():
+                messages.error(
+                    request,
+                    "Blockchain wallet has insufficient ETH for gas."
+                )
+            else:
+                messages.error(
+                    request,
+                    "Blockchain transaction failed."
+                )
+
+            return redirect("order_detail", escrow.order.id)
+
+        # Record payment
         Payment.objects.create(
             transaction=escrow,
             payer=request.user,
@@ -181,22 +292,231 @@ def fund_escrow(request, escrow_id):
             status="funded"
         )
 
-        escrow.status = "funded"
-        escrow.block_number = receipt.blockNumber
-        escrow.gas_used = receipt.gasUsed
+        buyer_wallet.balance_snapshot -= Decimal(escrow.amount)
+        buyer_wallet.save()
+
+        escrow.status = "paid"
         escrow.save()
+
+        messages.success(request, "Escrow funded successfully.")
+
+        send_order_email(request, escrow.order)
 
         return redirect("order_detail", escrow.order.id)
 
+from django.contrib import messages
+from django.shortcuts import redirect
 
 
+def release_delivery(request, order_id):
+
+    order = get_object_or_404(Order, id=order_id)
+
+    # if request.user != order.seller:
+    #     messages.error(request, "Only seller can ship this order.")
+    #     return redirect("order_detail", order.id)
+
+    # if order.status != "paid":
+    #     messages.error(request, "Order must be paid before shipping.")
+    #     return redirect("order_detail", order.id)
+
+    if request.method == "POST":
+
+        order.status = "shipped"
+        order.save()
+
+        messages.success(request, "Order marked as shipped.")
+
+    return redirect("order_detail", order.id)
+
+
+def confirm_delivery(request, order_id):
+
+    order = get_object_or_404(Order, id=order_id)
+
+    if request.user != order.buyer:
+        messages.error(request, "Only buyer can confirm delivery.")
+        return redirect("order_detail", order.id)
+
+    if order.status != "shipped":
+        messages.error(request, "Order must be shipped first.")
+        return redirect("order_detail", order.id)
+
+    if request.method == "POST":
+
+        escrow = order.escrowtransaction
+
+        seller_wallet = order.seller.userwallet
+
+        # Credit seller balance
+        seller_wallet.balance_snapshot += Decimal(order.total_price)
+        seller_wallet.save()
+
+        # Update escrow
+        escrow.status = "released"
+        escrow.save()
+
+        # Update order
+        order.status = "completed"
+        order.save()
+
+        messages.success(
+            request,
+            "Delivery confirmed. Funds released to seller."
+        )
+
+        send_order_email(request, order)
+
+    return redirect("order_detail", order.id)
+
+
+def mark_received(request, order_id):
+
+    order = get_object_or_404(Order, id=order_id)
+
+    # if request.user != order.buyer:
+    #     messages.error(request, "Only buyer can mark received.")
+    #     return redirect("order_detail", order.id)
+
+    # if order.status != "shipped":
+    #     messages.error(request, "Order has not been shipped.")
+    #     return redirect("order_detail", order.id)
+
+    if request.method == "POST":
+
+        order.status = "completed"
+        order.save()
+
+        messages.success(request, "Order received successfully.")
+
+    return redirect("order_detail", order.id)
+
+
+
+# EMAIL FUNCTION
+def send_order_email(request, order):
+    # Build URLs
+    confirm_url = request.build_absolute_uri(
+        f"/orders/{order.id}/confirm_delivery/"
+    )
+    ship_url = request.build_absolute_uri(
+        f"/orders/{order.id}/release_delivery/"
+    )
+    received_url = request.build_absolute_uri(
+        f"/orders/{order.id}/received/"
+    )
+
+    # HTML Email Content
+    html = f"""
+    <html>
+        <body style="font-family: Segoe UI; background: #f3f4f6; padding: 30px;">
+            <div style="
+                background: white;
+                padding: 25px;
+                border-radius: 10px;
+                max-width: 500px;
+                margin: auto;
+                text-align: center;
+            ">
+                <h2>Order Update</h2>
+
+                <p>Order <b>#{order.id}</b> status updated.</p>
+
+                <p><b>Product:</b> {order.product.name}</p>
+
+                <hr style="margin: 20px 0;">
+
+                <!-- Buttons Container -->
+                <div style="
+                    display: flex;
+                    justify-content: center;
+                    flex-wrap: wrap;
+                    gap: 10px;
+                    margin-top: 15px;
+                ">
+
+                    <a href="{ship_url}" style="
+                        background: #ffa41c;
+                        color: white;
+                        padding: 12px 18px;
+                        text-decoration: none;
+                        border-radius: 6px;
+                        display: inline-block;
+                    ">
+                        Ship Order
+                    </a>
+
+                    <a href="{confirm_url}" style="
+                        background: #0d6efd;
+                        color: white;
+                        padding: 12px 18px;
+                        text-decoration: none;
+                        border-radius: 6px;
+                        display: inline-block;
+                    ">
+                        Confirm Delivery
+                    </a>
+
+                    <a href="{received_url}" style="
+                        background: #198754;
+                        color: white;
+                        padding: 12px 18px;
+                        text-decoration: none;
+                        border-radius: 6px;
+                        display: inline-block;
+                    ">
+                        Mark Received
+                    </a>
+
+                </div>
+            </div>
+        </body>
+    </html>
+    """
+
+    # Create Email
+    email = EmailMultiAlternatives(
+        subject=f"Order #{order.id} Update",
+        body="Order update",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[order.buyer.email, order.seller.email],
+    )
+
+    # Attach HTML version
+    email.attach_alternative(html, "text/html")
+
+    # Send Email
+    email.send()
+
+from django.contrib.auth import authenticate, login
+from django.shortcuts import render, redirect
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('product_list')
+
+    error = None
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user:
+            login(request, user)
+            return redirect('product_list')
+        else:
+            error = "Invalid username or password"
+
+    return render(request, "login.html", {"error": error})
 
 def checkout(request, product_id):
     product = Product.objects.get(id=product_id)
 
     if request.method == "POST":
 
-        # Create order
+        # ✅ Create order
         order = Order.objects.create(
             buyer=request.user,
             seller=product.seller,
@@ -207,7 +527,7 @@ def checkout(request, product_id):
             status="escrow_created"
         )
 
-        # Create escrow DB record
+        # ✅ Create escrow record
         escrow = EscrowTransaction.objects.create(
             order=order,
             buyer=request.user,
@@ -218,21 +538,57 @@ def checkout(request, product_id):
             blockchain_network="ganache"
         )
 
-        # 🚀 Create escrow on blockchain
+        # ✅ Deploy escrow on blockchain
         result = BlockchainService.create_escrow(
-        buyer_address = BlockchainService.checksum(
-    request.user.userwallet.wallet_address
-),
-
-seller_address = BlockchainService.checksum(
-    product.seller.userwallet.wallet_address
-)
+            buyer_address=BlockchainService.checksum(
+                request.user.userwallet.wallet_address
+            ),
+            seller_address=BlockchainService.checksum(
+                product.seller.userwallet.wallet_address
+            )
         )
 
         escrow.contract_address = settings.MASTER_CONTRACT_ADDRESS
-        escrow.blockchain_escrow_id = result["escrow_id"]  # ✅ store actual on-chain ID
+        escrow.blockchain_escrow_id = result["escrow_id"]
         escrow.deployment_tx_hash = result["receipt"].transactionHash.hex()
         escrow.save()
+
+        # ✅ DJANGO ALERT
+        messages.success(request, "Order placed! Escrow created successfully.")
+
+        # ✅ EMAIL TO BUYER
+        send_mail(
+            subject="Order Confirmation",
+            message=f"""
+Your order #{order.id} was created successfully.
+
+Product: {product.name}
+Amount: {product.price} {product.currency}
+
+Next step: Fund the escrow to start the transaction.
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.DEFAULT_FROM_EMAIL],
+            fail_silently=True,
+        )
+
+        # ✅ EMAIL TO SELLER
+        send_mail(
+            subject="New Order Received",
+            message=f"""
+You received a new order #{order.id}.
+
+Product: {product.name}
+Buyer: {request.user.username}
+Amount: {product.price} {product.currency}
+
+Waiting for buyer to fund escrow.
+""",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.DEFAULT_FROM_EMAIL],
+            fail_silently=True,
+        )
+
         return redirect("order_detail", order.id)
 
     return render(request, "checkout.html", {
@@ -248,16 +604,26 @@ def order_detail(request, order_id):
         "order": order
     })
     
-    
+from django.core.paginator import Paginator
+from django.shortcuts import render
+
 def product_list(request):
+    query = request.GET.get('q')
     products = Product.objects.filter(is_active=True)
 
+    if query:
+        products = products.filter(name__icontains=query)
+
+    from django.core.paginator import Paginator
+    paginator = Paginator(products, 8)
+
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, "product.html", {
-        "products": products
+        "page_obj": page_obj
     })
     
-    
-
 def product_detail(request, product_id):
     product = Product.objects.get(id=product_id)
 
@@ -504,24 +870,24 @@ def create_order(request, product_id):
     })
 
 
-def confirm_delivery(request, escrow_id):
-    escrow = get_object_or_404(EscrowTransaction, id=escrow_id)
+# def confirm_delivery(request, escrow_id):
+#     escrow = get_object_or_404(EscrowTransaction, id=escrow_id)
 
-    receipt = BlockchainService.confirm_delivery(
-        escrow_id=int(escrow.contract_address),
-        buyer_address=escrow.buyer.userwallet.wallet_address
-    )
+#     receipt = BlockchainService.confirm_delivery(
+#         escrow_id=int(escrow.contract_address),
+#         buyer_address=escrow.buyer.userwallet.wallet_address
+#     )
 
-    escrow.status = "released"
-    escrow.save()
+#     escrow.status = "released"
+#     escrow.save()
 
-    order = escrow.order
-    order.status = "completed"
-    order.save()
+#     order = escrow.order
+#     order.status = "completed"
+#     order.save()
 
-    NotificationService.delivery_confirmed(order)
+#     NotificationService.delivery_confirmed(order)
 
-    return JsonResponse({"status": "released"})
+#     return JsonResponse({"status": "released"})
     
     
 def create_dispute(request, escrow_id):

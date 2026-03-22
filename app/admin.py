@@ -2,7 +2,15 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import *
 from import_export.admin import ExportMixin
+from django.contrib import admin
+from .models import *
 
+class BusinessAdminSite(admin.AdminSite):
+    site_header = "Business Intelligence Admin"
+    site_title = "BI Admin"
+    index_title = "Management Dashboard"
+
+admin_site = BusinessAdminSite(name="business_admin")
 
 
 # ==============================

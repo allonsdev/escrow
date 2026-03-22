@@ -1,25 +1,160 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Checkout</title>
-  <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+body {
+    background: #f3f4f6;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* NAVBAR */
+.navbar {
+    background: #131921;
+}
+.navbar .nav-link, .navbar-brand {
+    color: white !important;
+}
+
+/* CARDS */
+.checkout-box {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+}
+
+/* PRICE */
+.price {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #b12704;
+}
+
+/* BUTTONS */
+.btn-amazon {
+    background: #ffd814;
+    border: none;
+}
+.btn-amazon:hover {
+    background: #f7ca00;
+}
+
+.secure-box {
+    background: #f0fdf4;
+    padding: 12px;
+    border-radius: 10px;
+}
+</style>
 </head>
 <body>
 
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg">
+<div class="container-fluid px-4">
+<a class="navbar-brand fw-bold" href="/">MarketPro</a>
+
+<form class="d-flex flex-grow-1 mx-4" method="GET" action="/">
+<div class="input-group">
+<input name="q" class="form-control" placeholder="Search products...">
+<button class="btn">Search</button>
+</div>
+</form>
+
+<ul class="navbar-nav">
+<li class="nav-item"><a class="nav-link" href="#">Account</a></li>
+<li class="nav-item"><a class="nav-link" href="#">Orders</a></li>
+<li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-cart"></i></a></li>
+</ul>
+</div>
+</nav>
+
 <div class="container mt-4">
 
-  <h2>Checkout</h2>
+<a href="/" class="btn btn-link text-decoration-none mb-3">
+<i class="bi bi-arrow-left"></i> Back to products
+</a>
 
-  <p><strong>Product:</strong> {{ product.name }}</p>
-  <p><strong>Price:</strong> {{ product.price }} {{ product.currency }}</p>
+<div class="row g-4">
 
-  <form method="post">
-    {% csrf_token %}
-    <button class="btn btn-primary">Create Order</button>
-  </form>
+<!-- LEFT -->
+<div class="col-lg-7">
+<div class="checkout-box shadow-sm">
+
+<h5 class="fw-bold mb-4">
+<i class="bi bi-box-seam"></i> Order Summary
+</h5>
+
+<div class="d-flex justify-content-between mb-3">
+<span>Product</span>
+<span>{{ product.name }}</span>
+</div>
+
+<div class="d-flex justify-content-between mb-3">
+<span>Price</span>
+<span>{{ product.price }} {{ product.currency }}</span>
+</div>
+
+<hr>
+
+<div class="d-flex justify-content-between">
+<span class="fw-bold">Total</span>
+<span class="price">{{ product.price }} {{ product.currency }}</span>
+</div>
 
 </div>
+</div>
+
+<!-- RIGHT -->
+<div class="col-lg-5">
+<div class="checkout-box shadow-sm">
+
+<h5 class="fw-bold mb-4">
+<i class="bi bi-shield-lock"></i> Secure Payment
+</h5>
+
+<div class="secure-box mb-3">
+<i class="bi bi-lock-fill text-success"></i>
+Your payment is protected with escrow security.
+</div>
+
+{% if user.is_authenticated %}
+
+<form method="post">
+{% csrf_token %}
+
+<button class="btn btn-amazon w-100 mb-2">
+<i class="bi bi-lightning"></i> Place Order
+</button>
+
+</form>
+
+{% else %}
+
+<a href=\"{% url 'login' %}?next={{ request.path }}\" 
+   class=\"btn btn-amazon w-100\">
+   <i class=\"bi bi-person\"></i> Login to continue
+</a>
+
+{% endif %}
+
+<p class=\"text-muted small text-center mt-3\">
+By placing your order, you agree to our terms.
+</p>
+
+</div>
+</div>
+
+</div>
+
+</div>
+
+<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>
 
 </body>
 </html>

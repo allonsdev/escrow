@@ -1,56 +1,406 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Order Detail</title>
-  <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Detail</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+
+body{
+background:#f3f4f6;
+font-family:'Segoe UI',sans-serif;
+}
+
+/* NAVBAR */
+.navbar{
+background:#131921;
+}
+.navbar .nav-link,
+.navbar .navbar-brand{
+color:white !important;
+}
+
+/* CARD */
+.order-card{
+background:white;
+border-radius:14px;
+padding:30px;
+box-shadow:0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* PRICE */
+.price{
+font-size:2rem;
+font-weight:bold;
+color:#b12704;
+}
+
+.price-box{
+text-align:right;
+}
+
+/* STATUS BADGE */
+.status-badge{
+padding:8px 18px;
+border-radius:50px;
+font-weight:500;
+font-size:0.9rem;
+}
+
+/* TIMELINE */
+.timeline{
+border-left:3px solid #e5e5e5;
+padding-left:25px;
+}
+
+.timeline-step{
+position:relative;
+margin-bottom:18px;
+font-size:0.95rem;
+}
+
+.timeline-step::before{
+content:"";
+width:12px;
+height:12px;
+background:#ccc;
+border-radius:50%;
+position:absolute;
+left:-31px;
+top:5px;
+}
+
+.timeline-step.done{
+color:green;
+}
+
+.timeline-step.done::before{
+background:green;
+}
+
+.timeline-step.pending{
+color:#999;
+}
+
+/* BUTTONS */
+
+.btn-action{
+border-radius:50px;
+font-weight:500;
+padding:10px;
+}
+
+.btn-warning{
+background:#ffa41c;
+border:none;
+}
+
+.btn-warning:hover{
+background:#ff8f00;
+}
+
+.btn-success{
+background:#198754;
+border:none;
+}
+
+.btn-danger{
+background:#d9534f;
+border:none;
+}
+
+/* ALERTS */
+
+.alert-container{
+position:fixed;
+top:20px;
+right:20px;
+z-index:1050;
+min-width:260px;
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+.price-box{
+text-align:left;
+margin-top:15px;
+}
+}
+
+</style>
 </head>
+
 <body>
+
+<!-- NAVBAR -->
+
+<nav class="navbar navbar-expand-lg">
+<div class="container-fluid px-4">
+
+<a class="navbar-brand fw-bold" href="/">MarketPro</a>
+
+<form class="d-flex flex-grow-1 mx-4" method="GET" action="/">
+<div class="input-group">
+<input name="q" class="form-control" placeholder="Search products...">
+<button class="btn btn-warning">Search</button>
+</div>
+</form>
+
+<ul class="navbar-nav">
+<li class="nav-item"><a class="nav-link" href="#">Account</a></li>
+<li class="nav-item"><a class="nav-link" href="#">Orders</a></li>
+<li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-cart"></i></a></li>
+</ul>
+
+</div>
+</nav>
 
 <div class="container mt-4">
 
-  <h2>Order Detail</h2>
+<!-- ALERTS -->
 
-  <p><strong>Status:</strong> {{ order.status }}</p>
-  <p><strong>Product:</strong> {{ order.product.name }}</p>
-  <p><strong>Amount:</strong> {{ order.total_price }} {{ order.currency }}</p>
-  <p><strong>Buyer:</strong> {{ order.buyer.username }}</p>
-  <p><strong>Seller:</strong> {{ order.seller.username }}</p>
+{% if messages %}
+<div class="alert-container">
+{% for message in messages %}
+<div class="alert alert-success alert-dismissible fade show">
+{{ message }}
+<button class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+</div>
+{% endif %}
 
-  <hr>
+<a href="/" class="btn btn-link mb-3">
+<i class="bi bi-arrow-left"></i> Back to products
+</a>
 
-  <!-- FUND ESCROW -->
-  {% if order.status == "escrow_created" %}
-    <form method="post" action="{% url 'fund_escrow' order.escrowtransaction.id %}">
-      {% csrf_token %}
-      <button class="btn btn-success">Fund Escrow</button>
-    </form>
-  {% endif %}
+<div class="order-card">
 
-  <!-- MARK SHIPPED -->
-  {% if order.status == "paid" and request.user == order.seller %}
-    <form method="post" action="{% url 'mark_shipped' order.id %}">
-      {% csrf_token %}
-      <button class="btn btn-warning">Mark as Shipped</button>
-    </form>
-  {% endif %}
+<!-- HEADER -->
 
-  <!-- CONFIRM DELIVERY -->
-  {% if order.status == "shipped" and request.user == order.buyer %}
-    <form method="post" action="{% url 'confirm_delivery' order.escrowtransaction.id %}">
-      {% csrf_token %}
-      <button class="btn btn-primary">Confirm Delivery</button>
-    </form>
-  {% endif %}
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-  <hr>
+<h4 class="fw-bold">Order Summary</h4>
 
-  <a href="{% url 'raise_dispute' order.escrowtransaction.id %}"
-     class="btn btn-danger">
-     Raise Dispute
-  </a>
+<span class="badge status-badge
+{% if order.status == 'escrow_created' %}bg-secondary
+{% elif order.status == 'paid' %}bg-success
+{% elif order.status == 'shipped' %}bg-warning text-dark
+{% elif order.status == 'completed' %}bg-primary
+{% else %}bg-dark{% endif %}
+">
+
+{{ order.status|title }}
+
+</span>
 
 </div>
+
+<!-- INFO -->
+
+<div class="row mb-4">
+
+<div class="col-md-6">
+
+<p><strong>Product:</strong> {{ order.product.name }}</p>
+<p><strong>Buyer:</strong> {{ order.buyer.username }}</p>
+<p><strong>Seller:</strong> {{ order.seller.username }}</p>
+
+</div>
+
+<div class="col-md-6 price-box">
+
+<p class="text-muted mb-1">Total Price</p>
+<div class="price">{{ order.total_price }} {{ order.currency }}</div>
+
+</div>
+
+</div>
+
+<hr>
+
+<!-- TIMELINE -->
+
+<div class="timeline mb-4">
+
+<div class="timeline-step done">
+<i class="bi bi-shield-check"></i> Escrow Created
+</div>
+
+<div class="timeline-step {% if order.status != 'escrow_created' %}done{% else %}pending{% endif %}">
+<i class="bi bi-wallet2"></i> Payment Funded
+</div>
+
+<div class="timeline-step {% if order.status == 'shipped' or order.status == 'completed' %}done{% else %}pending{% endif %}">
+<i class="bi bi-truck"></i> Shipped
+</div>
+
+<div class="timeline-step {% if order.status == 'completed' %}done{% else %}pending{% endif %}">
+<i class="bi bi-check-circle"></i> Delivery Confirmed
+</div>
+
+</div>
+
+<hr>
+
+<!-- ACTIONS -->
+
+<div class="row g-3">
+
+<!-- FUND -->
+
+{% if order.status == "escrow_created" %}
+
+<div class="col-md-6">
+
+<form method="post" action="{% url 'fund_escrow' order.escrowtransaction.id %}">
+{% csrf_token %}
+
+<button
+class="btn btn-success w-100 btn-action"
+onclick="this.disabled=true;this.form.submit();">
+
+<i class="bi bi-wallet2"></i>
+Fund Escrow
+
+</button>
+
+</form>
+
+</div>
+
+{% endif %}
+
+
+<!-- SELLER SHIPS -->
+
+{% if order.status == "paid" and request.user == order.seller %}
+
+<div class="col-md-6">
+
+<form method="post" action="{% url 'release_delivery' order.id %}">
+{% csrf_token %}
+
+<button class="btn btn-warning w-100 btn-action">
+
+<i class="bi bi-truck"></i>
+Release Delivery
+
+</button>
+
+</form>
+
+</div>
+
+{% endif %}
+
+
+<!-- BUYER CONFIRM -->
+
+{% if order.status == "shipped" and request.user == order.buyer %}
+
+<div class="col-md-6">
+
+<form method="post" action="{% url 'confirm_delivery' order.id %}">
+{% csrf_token %}
+
+<button class="btn btn-primary w-100 btn-action">
+
+<i class="bi bi-check-circle"></i>
+Confirm Delivery
+
+</button>
+
+</form>
+
+</div>
+
+{% endif %}
+
+
+<!-- MARK RECEIVED -->
+
+{% if order.status == "shipped" and request.user == order.buyer %}
+
+<div class="col-md-6">
+
+<form method="post" action="{% url 'mark_received' order.id %}">
+{% csrf_token %}
+
+<button class="btn btn-success w-100 btn-action">
+
+<i class="bi bi-box-seam"></i>
+Mark Received
+
+</button>
+
+</form>
+
+</div>
+
+{% endif %}
+
+
+<!-- DISPUTE -->
+
+<div class="col-md-6">
+
+<a href="{% url 'raise_dispute' order.escrowtransaction.id %}"
+class="btn btn-danger w-100 btn-action">
+
+<i class="bi bi-exclamation-triangle"></i>
+Raise Dispute
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+/* AUTO HIDE ALERTS */
+
+setTimeout(function(){
+
+document.querySelectorAll(".alert").forEach(function(alert){
+alert.remove()
+})
+
+},4000)
+
+
+/* AUTO REFRESH STATUS */
+
+setInterval(function(){
+
+fetch(window.location.href)
+.then(response => response.text())
+.then(html => {
+
+let parser = new DOMParser()
+let doc = parser.parseFromString(html,"text/html")
+
+let newStatus = doc.querySelector(".status-badge").innerHTML
+
+document.querySelector(".status-badge").innerHTML = newStatus
+
+})
+
+},5000)
+
+</script>
 
 </body>
 </html>
