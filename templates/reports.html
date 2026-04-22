@@ -1,0 +1,120 @@
+<div class="order-card">
+  <!-- HEADER -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="fw-bold mb-1">Order Summary</h4>
+      <small class="text-muted">Order details & progress</small>
+    </div>
+
+    <span
+      class="badge status-badge {% if order.status == 'escrow_created' %}bg-secondary {% elif order.status == 'paid' %}bg-success {% elif order.status == 'shipped' %}bg-warning text-dark {% elif order.status == 'completed' %}bg-primary {% else %}bg-dark{% endif %}"
+    >
+      {{ order.status|title }}
+    </span>
+  </div>
+
+  <!-- INFO -->
+  <div class="row g-4 align-items-center mb-4">
+    <div class="col-md-6">
+      <div class="mb-2">
+        <span class="text-muted small">Product</span><br />
+        <strong>{{ order.product.name }}</strong>
+      </div>
+
+      <div class="mb-2">
+        <span class="text-muted small">Buyer</span><br />
+        <strong>{{ order.buyer.username }}</strong>
+      </div>
+
+      <div>
+        <span class="text-muted small">Seller</span><br />
+        <strong>{{ order.seller.username }}</strong>
+      </div>
+    </div>
+
+    <div class="col-md-6 text-md-end">
+      <span class="text-muted small">Total Price</span>
+      <div class="price mt-1">{{ order.total_price }} {{ order.currency }}</div>
+    </div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="border-top my-4"></div>
+
+  <!-- TIMELINE -->
+  <div class="timeline mb-4">
+    <div class="timeline-step done">
+      <div class="fw-semibold">Escrow Created</div>
+    </div>
+
+    <div
+      class="timeline-step {% if order.status != 'escrow_created' %}done{% else %}pending{% endif %}"
+    >
+      <div class="fw-semibold">Payment Funded</div>
+    </div>
+
+    <div
+      class="timeline-step {% if order.status == 'shipped' or order.status == 'completed' %}done{% else %}pending{% endif %}"
+    >
+      <div class="fw-semibold">Shipped</div>
+    </div>
+
+    <div
+      class="timeline-step {% if order.status == 'completed' %}done{% else %}pending{% endif %}"
+    >
+      <div class="fw-semibold">Delivery Confirmed</div>
+    </div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="border-top my-4"></div>
+
+  <!-- ACTIONS -->
+  <div class="actions-box">
+    <div class="mb-3 fw-semibold">Actions</div>
+
+    <div class="action-grid">
+      {% if order.status == "escrow_created" %}
+      <form
+        method="post"
+        action="{% url 'fund_escrow' order.escrowtransaction.id %}"
+      >
+        {% csrf_token %}
+        <button class="btn btn-success btn-action w-100">
+          <i class="bi bi-wallet2"></i> Fund Escrow
+        </button>
+      </form>
+      {% endif %} {% if order.status == "paid" and request.user == order.seller
+      %}
+      <form method="post" action="{% url 'release_delivery' order.id %}">
+        {% csrf_token %}
+        <button class="btn btn-warning btn-action w-100">
+          <i class="bi bi-truck"></i> Release Delivery
+        </button>
+      </form>
+      {% endif %} {% if order.status == "shipped" and request.user ==
+      order.buyer %}
+      <form method="post" action="{% url 'confirm_delivery' order.id %}">
+        {% csrf_token %}
+        <button class="btn btn-primary btn-action w-100">
+          <i class="bi bi-check-circle"></i> Confirm Delivery
+        </button>
+      </form>
+
+      <form method="post" action="{% url 'mark_received' order.id %}">
+        {% csrf_token %}
+        <button class="btn btn-success btn-action w-100">
+          <i class="bi bi-box-seam"></i> Mark Received
+        </button>
+      </form>
+      {% endif %}
+
+      <a
+        href="{% url 'raise_dispute' order.escrowtransaction.id %}"
+        class="btn btn-danger btn-action w-100"
+      >
+        <i class="bi bi-exclamation-triangle"></i> Raise Dispute
+      </a>
+    </div>
+  </div>
+</div>

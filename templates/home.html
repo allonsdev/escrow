@@ -1,0 +1,860 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block title %}MarketPro — Secure Escrow Marketplace{% endblock %}
+
+{% block extra_head %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #0a0f1e;
+  --ink2:   #111827;
+  --white:  #ffffff;
+  --offwhite: #f5f7fb;
+  --blue:   #1a56db;
+  --sky:    #38bdf8;
+  --slate:  #64748b;
+  --border: rgba(255,255,255,0.10);
+  --card-bg: rgba(255,255,255,0.04);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ink);
+    color: var(--white);
+    overflow-x: hidden;
+
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+}
+
+/* ─── PARTICLES CANVAS ─── */
+#particles-js {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+}
+
+/* ─── HERO ─── */
+.hero-wrap {
+  position: relative; min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: center;
+  overflow: hidden; background: var(--ink);
+}
+
+/* Gradient mesh behind everything */
+.hero-mesh {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 55% at 65% 45%, rgba(26,86,219,.22) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 15% 75%, rgba(14,165,233,.14) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 85%, rgba(56,189,248,.10) 0%, transparent 55%);
+}
+
+/* ─── BLOCKCHAIN SVG NETWORK ─── */
+.blockchain-canvas {
+  position: absolute; right: -40px; top: 50%;
+  transform: translateY(-50%);
+  width: 52vw; max-width: 780px; height: 90vh;
+  z-index: 2; pointer-events: none; opacity: 0.85;
+}
+
+/* ─── BOBBING SPHERES ─── */
+.sphere {
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 2;
+  filter: blur(0px);
+}
+.sphere-1 {
+  width: 180px; height: 180px; top: 8%; left: -60px;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.18), rgba(26,86,219,.30) 60%, transparent 100%);
+  border: 1px solid rgba(255,255,255,.10);
+  animation: bob1 7s ease-in-out infinite;
+}
+.sphere-2 {
+  width: 90px; height: 90px; bottom: 20%; left: 12%;
+  background: radial-gradient(circle at 40% 35%, rgba(255,255,255,.22), rgba(14,165,233,.25) 60%, transparent 100%);
+  border: 1px solid rgba(56,189,248,.20);
+  animation: bob2 5.5s ease-in-out infinite;
+}
+.sphere-3 {
+  width: 260px; height: 260px; top: -80px; right: 48%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.06), rgba(26,86,219,.15) 70%, transparent 100%);
+  border: 1px solid rgba(255,255,255,.05);
+  animation: bob3 9s ease-in-out infinite;
+}
+.sphere-4 {
+  width: 50px; height: 50px; top: 35%; left: 38%;
+  background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.30), rgba(56,189,248,.20) 60%);
+  border: 1px solid rgba(255,255,255,.15);
+  animation: bob1 4s ease-in-out infinite reverse;
+}
+.sphere-5 {
+  width: 120px; height: 120px; bottom: 10%; right: 8%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.15), rgba(26,86,219,.20) 60%, transparent 100%);
+  border: 1px solid rgba(255,255,255,.08);
+  animation: bob2 8s ease-in-out infinite 1s;
+}
+
+/* ─── BOBBING GEO SHAPES ─── */
+.geo {
+  position: absolute; pointer-events: none; z-index: 2; opacity: 0.18;
+}
+.geo-tri {
+  width: 0; height: 0;
+  border-left: 28px solid transparent; border-right: 28px solid transparent;
+  border-bottom: 48px solid #38bdf8;
+  top: 22%; left: 22%;
+  animation: bob2 6s ease-in-out infinite;
+}
+.geo-ring {
+  width: 64px; height: 64px; border-radius: 50%;
+  border: 3px solid #38bdf8;
+  bottom: 28%; left: 30%;
+  animation: bob3 7s ease-in-out infinite 0.5s;
+  opacity: 0.14;
+}
+.geo-sq {
+  width: 32px; height: 32px;
+  border: 2px solid #ffffff;
+  transform: rotate(45deg);
+  top: 60%; left: 8%;
+  animation: bob1 5s ease-in-out infinite 1s;
+  opacity: 0.12;
+}
+.geo-hex {
+  width: 48px; height: 48px;
+  background: rgba(56,189,248,.15);
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  top: 12%; right: 45%;
+  animation: bob2 8s ease-in-out infinite;
+  opacity: 0.20;
+}
+
+@keyframes bob1 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-22px) rotate(4deg); }
+}
+@keyframes bob2 {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50%       { transform: translateY(-14px) rotate(-5deg); }
+}
+@keyframes bob3 {
+  0%, 100% { transform: translateY(0px); }
+  33%       { transform: translateY(-18px); }
+  66%       { transform: translateY(-8px); }
+}
+
+/* ─── HERO CONTENT ─── */
+.hero-content {
+  position: relative; z-index: 5;
+  padding: 0 5vw; max-width: 640px;
+  margin-top: 0;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px; padding: 6px 18px;
+  font-size: 11px; font-weight: 600; letter-spacing: 2px;
+  text-transform: uppercase; color: #93c5fd; margin-bottom: 28px;
+  backdrop-filter: blur(10px);
+  animation: fadeUp .7s ease both;
+}
+.hero-headline {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(42px, 6.5vw, 82px);
+  font-weight: 800; line-height: 1.03;
+  letter-spacing: -2px; color: #fff;
+  margin-bottom: 22px;
+  animation: fadeUp .7s ease .1s both;
+}
+.hero-headline .grad {
+  background: linear-gradient(120deg, #38bdf8 0%, #a5b4fc 60%, #60a5fa 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-sub {
+  font-size: 17px; color: #94a3b8; line-height: 1.7;
+  margin-bottom: 40px; font-weight: 400;
+  animation: fadeUp .7s ease .2s both;
+}
+.hero-cta-row {
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+  animation: fadeUp .7s ease .3s both;
+}
+.btn-primary-hero {
+  background: #fff; color: #0a0f1e;
+  font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 15px;
+  padding: 15px 30px; border-radius: 12px;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  transition: all .2s; border: none; cursor: pointer;
+}
+.btn-primary-hero:hover { background: #e0f2fe; transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,.35); }
+.btn-outline-hero {
+  background: transparent; color: #e2e8f0;
+  font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 15px;
+  padding: 14px 28px; border-radius: 12px;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  border: 1.5px solid rgba(255,255,255,.22); transition: all .2s; backdrop-filter: blur(6px);
+}
+.btn-outline-hero:hover { border-color: #fff; background: rgba(255,255,255,.08); color: #fff; }
+
+/* ─── TRUST BAR ─── */
+.trust-bar {
+  position: relative; z-index: 5;
+  margin-top: 64px;
+  display: flex; gap: 36px; flex-wrap: wrap; align-items: center;
+  padding: 20px 5vw;
+  background: rgba(255,255,255,.04);
+  border-top: 1px solid rgba(255,255,255,.07);
+  backdrop-filter: blur(12px);
+}
+.trust-item { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 500; color: #94a3b8; white-space: nowrap; }
+.trust-item i { color: #38bdf8; font-size: 16px; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── STATS ─── */
+.stats-band {
+  background: var(--ink2);
+  border-top: 1px solid rgba(255,255,255,.07);
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+.stats-inner {
+  max-width: 1400px; margin: 0 auto; padding: 52px 5vw;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+}
+.stat-item { text-align: center; }
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 48px; font-weight: 800;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: -2px;
+}
+.stat-label { font-size: 13px; color: var(--slate); font-weight: 500; margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
+
+/* ─── CATEGORY SLIDER ─── */
+.cat-section {
+  background: var(--ink);
+  padding: 80px 0; overflow: hidden;
+}
+.cat-header {
+  padding: 0 5vw; margin-bottom: 40px;
+  display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+}
+.section-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: #38bdf8; margin-bottom: 8px; }
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 3vw, 44px); font-weight: 800;
+  color: #fff; letter-spacing: -1px; line-height: 1.1;
+}
+.section-sub { font-size: 16px; color: var(--slate); margin-top: 8px; line-height: 1.6; }
+
+/* Full-width slider track */
+.slider-track-outer {
+  position: relative;
+  overflow: hidden;
+}
+.slider-track-outer::before,
+.slider-track-outer::after {
+  content: ''; position: absolute; top: 0; bottom: 0; width: 80px; z-index: 5; pointer-events: none;
+}
+.slider-track-outer::before { left: 0; background: linear-gradient(to right, var(--ink), transparent); }
+.slider-track-outer::after  { right: 0; background: linear-gradient(to left, var(--ink), transparent); }
+
+.slider-viewport {
+  overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none;
+  padding: 12px 5vw 28px;
+  cursor: grab;
+}
+.slider-viewport::-webkit-scrollbar { display: none; }
+.slider-viewport.dragging { cursor: grabbing; scroll-behavior: auto; }
+
+.slider-track {
+  display: flex; gap: 18px;
+  width: max-content;
+}
+
+.cat-card {
+  position: relative; border-radius: 18px; overflow: hidden;
+  text-decoration: none; flex-shrink: 0;
+  transition: transform .35s cubic-bezier(.4,0,.2,1), box-shadow .35s;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.cat-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 28px 56px rgba(0,0,0,.50); }
+
+/* Large card */
+.cat-card.lg { width: 420px; height: 480px; }
+/* Medium */
+.cat-card.md { width: 300px; height: 480px; }
+/* Tall narrow */
+.cat-card.sm { width: 240px; height: 480px; }
+
+.cat-bg-img {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  transition: transform .6s cubic-bezier(.4,0,.2,1);
+}
+.cat-card:hover .cat-bg-img { transform: scale(1.08); }
+.cat-overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(5,10,25,.88) 0%, rgba(5,10,25,.30) 50%, transparent 100%);
+}
+.cat-overlay-top {
+  position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(26,86,219,.12) 0%, transparent 40%);
+}
+.cat-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 24px 22px;
+}
+.cat-label h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px; font-weight: 800; color: #fff;
+  margin-bottom: 4px; line-height: 1.2;
+}
+.cat-label .cat-count {
+  font-size: 12px; color: rgba(255,255,255,.60); font-weight: 500;
+  letter-spacing: .5px; margin-bottom: 14px;
+}
+.cat-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.12); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.20);
+  color: #fff; font-size: 12px; font-weight: 600;
+  padding: 6px 14px; border-radius: 999px;
+  transition: background .2s;
+}
+.cat-card:hover .cat-pill { background: rgba(56,189,248,.25); border-color: rgba(56,189,248,.40); }
+
+.cat-badge {
+  position: absolute; top: 16px; left: 16px;
+  background: rgba(56,189,248,.15); border: 1px solid rgba(56,189,248,.35);
+  color: #7dd3fc; font-size: 11px; font-weight: 700;
+  padding: 4px 12px; border-radius: 999px; letter-spacing: 1px; text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+/* Slider nav dots */
+.slider-nav {
+  display: flex; justify-content: center; gap: 8px; margin-top: 20px; padding: 0 5vw;
+}
+.slider-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,.20); border: none; cursor: pointer;
+  transition: all .2s; padding: 0;
+}
+.slider-dot.active { background: #38bdf8; width: 24px; border-radius: 4px; }
+
+/* ─── FEATURED PRODUCTS ─── */
+.feat-section {
+  background: var(--ink2); padding: 80px 5vw;
+}
+.product-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 40px;
+}
+.fp-card {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 16px; overflow: hidden; text-decoration: none;
+  display: block; transition: all .25s;
+}
+.fp-card:hover {
+  background: rgba(255,255,255,.07); border-color: rgba(56,189,248,.25);
+  transform: translateY(-4px); box-shadow: 0 20px 48px rgba(0,0,0,.40);
+}
+.fp-img { height: 200px; overflow: hidden; position: relative; background: rgba(255,255,255,.03); }
+.fp-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+.fp-card:hover .fp-img img { transform: scale(1.07); }
+.fp-tag {
+  position: absolute; top: 10px; left: 10px;
+  background: #1a56db; color: #fff;
+  font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.fp-body { padding: 16px; }
+.fp-cat { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #38bdf8; margin-bottom: 6px; }
+.fp-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.fp-seller { font-size: 12px; color: var(--slate); margin-bottom: 12px; }
+.fp-footer { display: flex; align-items: center; justify-content: space-between; }
+.fp-price { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: #38bdf8; }
+.fp-price span { font-size: 11px; font-weight: 500; color: var(--slate); }
+.fp-stars { color: #f59e0b; font-size: 12px; }
+
+/* ─── HOW IT WORKS ─── */
+.hiw-section {
+  background: var(--ink);
+  padding: 80px 5vw; overflow: hidden; position: relative;
+}
+.hiw-section::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(26,86,219,.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hiw-steps {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 32px; margin-top: 56px; position: relative;
+}
+.hiw-steps::before {
+  content: ''; position: absolute; top: 32px; left: 8%; right: 8%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56,189,248,.30), rgba(26,86,219,.30), transparent);
+}
+.hiw-step { text-align: center; position: relative; }
+.hiw-num {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: rgba(26,86,219,.20); border: 1.5px solid rgba(56,189,248,.30);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #60a5fa;
+  margin: 0 auto 20px; position: relative; z-index: 1;
+}
+.hiw-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
+.hiw-desc { font-size: 14px; color: var(--slate); line-height: 1.65; }
+
+/* ─── SELLER CTA ─── */
+.seller-cta {
+  background: linear-gradient(135deg, #0f172a 0%, #1a56db 60%, #0ea5e9 100%);
+  padding: 80px 5vw; text-align: center; position: relative; overflow: hidden;
+}
+.seller-cta::before {
+  content: ''; position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.seller-cta h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 3.5vw, 48px); font-weight: 800;
+  color: #fff; letter-spacing: -1px; margin-bottom: 14px; position: relative; z-index: 1;
+}
+.seller-cta p { font-size: 18px; color: #bae6fd; max-width: 460px; margin: 0 auto 36px; line-height: 1.6; position: relative; z-index: 1; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 1024px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-inner { grid-template-columns: repeat(2, 1fr); }
+  .hiw-steps { grid-template-columns: repeat(2, 1fr); }
+  .hiw-steps::before { display: none; }
+}
+@media (max-width: 640px) {
+  .blockchain-canvas { display: none; }
+  .product-grid { grid-template-columns: 1fr; }
+  .stats-inner { grid-template-columns: repeat(2, 1fr); }
+  .trust-bar { gap: 18px; overflow-x: auto; }
+  .hero-headline { letter-spacing: -1px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════════════════════════
+     HERO
+════════════════════════════════════════════ -->
+<section class="hero-wrap">
+
+  <!-- Particles -->
+  <div id="particles-js"></div>
+
+  <!-- Gradient mesh -->
+  <div class="hero-mesh"></div>
+
+  <!-- Bobbing spheres -->
+  <div class="sphere sphere-1"></div>
+  <div class="sphere sphere-2"></div>
+  <div class="sphere sphere-3"></div>
+  <div class="sphere sphere-4"></div>
+  <div class="sphere sphere-5"></div>
+
+  <!-- Bobbing geo shapes -->
+  <div class="geo geo-tri"></div>
+  <div class="geo geo-ring"></div>
+  <div class="geo geo-sq"></div>
+  <div class="geo geo-hex"></div>
+
+  <!-- Blockchain SVG Network -->
+  <svg class="blockchain-canvas" viewBox="0 0 700 800" fill="none" xmlns="http://www.w3.org/2000/svg" id="blockchainSvg">
+    <!-- Grid dots (nodes) -->
+    <!-- Connections drawn by JS below; static fallback defined in SVG -->
+    <g id="bc-lines" stroke="rgba(56,189,248,0.20)" stroke-width="1">
+      <line x1="120" y1="120" x2="300" y2="200"/>
+      <line x1="300" y1="200" x2="500" y2="130"/>
+      <line x1="500" y1="130" x2="580" y2="300"/>
+      <line x1="300" y1="200" x2="400" y2="380"/>
+      <line x1="400" y1="380" x2="580" y2="300"/>
+      <line x1="400" y1="380" x2="200" y2="420"/>
+      <line x1="200" y1="420" x2="120" y2="120"/>
+      <line x1="200" y1="420" x2="300" y2="600"/>
+      <line x1="300" y1="600" x2="500" y2="550"/>
+      <line x1="500" y1="550" x2="400" y2="380"/>
+      <line x1="120" y1="120" x2="60" y2="300"/>
+      <line x1="60" y1="300" x2="200" y2="420"/>
+      <line x1="580" y1="300" x2="630" y2="480"/>
+      <line x1="630" y1="480" x2="500" y2="550"/>
+      <line x1="300" y1="600" x2="200" y2="720"/>
+      <line x1="500" y1="550" x2="560" y2="700"/>
+      <line x1="200" y1="720" x2="560" y2="700"/>
+    </g>
+    <!-- Animated pulse lines -->
+    <g id="bc-pulses">
+      <line x1="300" y1="200" x2="400" y2="380" stroke="rgba(56,189,248,0.55)" stroke-width="1.5" stroke-dasharray="8 6">
+        <animate attributeName="stroke-dashoffset" from="0" to="-28" dur="1.4s" repeatCount="indefinite"/>
+      </line>
+      <line x1="120" y1="120" x2="300" y2="200" stroke="rgba(99,102,241,0.50)" stroke-width="1" stroke-dasharray="6 8">
+        <animate attributeName="stroke-dashoffset" from="0" to="-28" dur="2.1s" repeatCount="indefinite"/>
+      </line>
+      <line x1="400" y1="380" x2="500" y2="550" stroke="rgba(56,189,248,0.40)" stroke-width="1" stroke-dasharray="6 6">
+        <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.8s" repeatCount="indefinite"/>
+      </line>
+    </g>
+    <!-- Nodes (hexagon blocks) -->
+    <g id="bc-nodes">
+      <!-- Each node: outer glow circle + inner hex -->
+      <!-- Node 1 -->
+      <circle cx="300" cy="200" r="22" fill="rgba(26,86,219,0.20)" stroke="rgba(56,189,248,0.45)" stroke-width="1.5">
+        <animate attributeName="r" values="22;26;22" dur="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;0.7;1" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <polygon points="300,188 310,194 310,206 300,212 290,206 290,194" fill="rgba(26,86,219,0.55)" stroke="rgba(56,189,248,0.80)" stroke-width="1"/>
+      <text x="300" y="204" text-anchor="middle" fill="#bae6fd" font-size="7" font-family="monospace">0x1A</text>
+
+      <!-- Node 2 -->
+      <circle cx="500" cy="130" r="18" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.35)" stroke-width="1.5">
+        <animate attributeName="r" values="18;22;18" dur="4s" repeatCount="indefinite" begin="0.5s"/>
+      </circle>
+      <polygon points="500,120 508,125 508,135 500,140 492,135 492,125" fill="rgba(14,165,233,0.40)" stroke="rgba(56,189,248,0.70)" stroke-width="1"/>
+      <text x="500" y="133" text-anchor="middle" fill="#bae6fd" font-size="6" font-family="monospace">BLK</text>
+
+      <!-- Node 3 -->
+      <circle cx="400" cy="380" r="26" fill="rgba(26,86,219,0.25)" stroke="rgba(99,102,241,0.55)" stroke-width="1.5">
+        <animate attributeName="r" values="26;30;26" dur="2.5s" repeatCount="indefinite" begin="1s"/>
+        <animate attributeName="opacity" values="1;0.8;1" dur="2.5s" repeatCount="indefinite" begin="1s"/>
+      </circle>
+      <polygon points="400,366 412,373 412,387 400,394 388,387 388,373" fill="rgba(26,86,219,0.60)" stroke="rgba(99,102,241,0.85)" stroke-width="1.5"/>
+      <text x="400" y="384" text-anchor="middle" fill="#e0e7ff" font-size="7" font-family="monospace">0x3F</text>
+
+      <!-- Node 4 -->
+      <circle cx="580" cy="300" r="16" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.35)" stroke-width="1">
+        <animate attributeName="r" values="16;20;16" dur="5s" repeatCount="indefinite" begin="0.8s"/>
+      </circle>
+      <polygon points="580,292 587,296 587,304 580,308 573,304 573,296" fill="rgba(14,165,233,0.35)" stroke="rgba(56,189,248,0.65)" stroke-width="1"/>
+
+      <!-- Node 5 -->
+      <circle cx="200" cy="420" r="20" fill="rgba(26,86,219,0.20)" stroke="rgba(56,189,248,0.40)" stroke-width="1.5">
+        <animate attributeName="r" values="20;24;20" dur="3.5s" repeatCount="indefinite" begin="1.5s"/>
+      </circle>
+      <polygon points="200,410 208,415 208,425 200,430 192,425 192,415" fill="rgba(26,86,219,0.50)" stroke="rgba(56,189,248,0.75)" stroke-width="1"/>
+
+      <!-- Node 6 -->
+      <circle cx="300" cy="600" r="18" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.35)" stroke-width="1">
+        <animate attributeName="r" values="18;22;18" dur="4s" repeatCount="indefinite" begin="2s"/>
+      </circle>
+      <polygon points="300,591 308,596 308,606 300,611 292,606 292,596" fill="rgba(14,165,233,0.40)" stroke="rgba(56,189,248,0.65)" stroke-width="1"/>
+
+      <!-- Node 7 -->
+      <circle cx="120" cy="120" r="15" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.40)" stroke-width="1">
+        <animate attributeName="r" values="15;19;15" dur="3.8s" repeatCount="indefinite" begin="0.3s"/>
+      </circle>
+      <polygon points="120,113 126,116.5 126,123.5 120,127 114,123.5 114,116.5" fill="rgba(99,102,241,0.40)" stroke="rgba(99,102,241,0.70)" stroke-width="1"/>
+
+      <!-- Node 8 -->
+      <circle cx="500" cy="550" r="20" fill="rgba(26,86,219,0.20)" stroke="rgba(56,189,248,0.40)" stroke-width="1.5">
+        <animate attributeName="r" values="20;24;20" dur="4.5s" repeatCount="indefinite" begin="0.7s"/>
+      </circle>
+      <polygon points="500,540 508,545 508,555 500,560 492,555 492,545" fill="rgba(26,86,219,0.50)" stroke="rgba(56,189,248,0.75)" stroke-width="1"/>
+
+      <!-- Node 9 / Central hash -->
+      <circle cx="60" cy="300" r="13" fill="rgba(14,165,233,0.12)" stroke="rgba(56,189,248,0.30)" stroke-width="1"/>
+      <polygon points="60,293 66,297 66,303 60,307 54,303 54,297" fill="rgba(14,165,233,0.30)" stroke="rgba(56,189,248,0.55)" stroke-width="1"/>
+
+      <!-- Floating hash labels -->
+      <text x="320" y="170" fill="rgba(148,163,184,0.55)" font-size="9" font-family="monospace">hash: 0xa8f3...</text>
+      <text x="420" y="360" fill="rgba(148,163,184,0.50)" font-size="8" font-family="monospace">nonce: 4821</text>
+      <text x="210" y="450" fill="rgba(148,163,184,0.45)" font-size="8" font-family="monospace">prev: 0x3c1...</text>
+      <text x="310" y="630" fill="rgba(148,163,184,0.45)" font-size="8" font-family="monospace">tx: 12 | gas: 21k</text>
+    </g>
+
+    <!-- Travelling packet dots -->
+    <circle r="3" fill="#38bdf8" opacity="0.9">
+      <animateMotion dur="2.8s" repeatCount="indefinite" begin="0s">
+        <mpath href="#path1"/>
+      </animateMotion>
+    </circle>
+    <circle r="2" fill="#818cf8" opacity="0.8">
+      <animateMotion dur="3.5s" repeatCount="indefinite" begin="1s">
+        <mpath href="#path2"/>
+      </animateMotion>
+    </circle>
+    <defs>
+      <path id="path1" d="M300,200 L400,380 L500,550 L300,600 L200,420 L300,200"/>
+      <path id="path2" d="M120,120 L300,200 L580,300 L500,550 L200,420 L120,120"/>
+    </defs>
+  </svg>
+
+  <!-- Hero Text -->
+  <div class="hero-content">
+    <div class="hero-eyebrow"><i class="bi bi-shield-check-fill"></i> Blockchain Escrow Protection</div>
+    <h1 class="hero-headline">Buy &amp; Sell With<br><span class="grad">True Confidence</span></h1>
+    <p class="hero-sub">Every transaction secured by smart contracts. Funds held in escrow until you confirm delivery — no risk, just results.</p>
+    <div class="hero-cta-row">
+      <a href="{% url 'product_list' %}" class="btn-primary-hero"><i class="bi bi-grid-3x3-gap-fill"></i> Shop Now</a>
+      <a href="{% url 'register' %}" class="btn-outline-hero"><i class="bi bi-person-plus"></i> Join Free</a>
+    </div>
+  </div>
+
+  <!-- Trust bar -->
+  <div class="trust-bar">
+    <div class="trust-item"><i class="bi bi-shield-lock-fill"></i> Blockchain escrow on every order</div>
+    <div class="trust-item"><i class="bi bi-lightning-charge-fill"></i> Instant settlement</div>
+    <div class="trust-item"><i class="bi bi-award-fill"></i> Verified sellers</div>
+    <div class="trust-item"><i class="bi bi-arrow-repeat"></i> Dispute resolution</div>
+    <div class="trust-item"><i class="bi bi-people-fill"></i> {{ total_users|default:"1,200" }}+ members</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     STATS
+════════════════════════════════════════════ -->
+<div class="stats-band">
+  <div class="stats-inner">
+    <div class="stat-item"><div class="stat-num">{{ total_products|default:"4,200" }}+</div><div class="stat-label">Active Products</div></div>
+    <div class="stat-item"><div class="stat-num">{{ total_orders|default:"12,800" }}+</div><div class="stat-label">Completed Orders</div></div>
+    <div class="stat-item"><div class="stat-num">{{ total_shops|default:"380" }}+</div><div class="stat-label">Verified Shops</div></div>
+    <div class="stat-item"><div class="stat-num">0%</div><div class="stat-label">Fraud Rate</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     CATEGORIES — FULL WIDTH SLIDER
+════════════════════════════════════════════ -->
+<section class="cat-section">
+  <div class="cat-header">
+    <div>
+      <div class="section-eyebrow">Browse</div>
+      <h2 class="section-title">Shop by Category</h2>
+      <p class="section-sub">Explore curated collections across electronics, fashion, art, and more.</p>
+    </div>
+    <a href="{% url 'product_list' %}" class="btn-outline-hero" style="font-size:14px; padding:10px 22px;">View All <i class="bi bi-arrow-right"></i></a>
+  </div>
+
+  <div class="slider-track-outer">
+    <div class="slider-viewport" id="catSlider">
+      <div class="slider-track" id="catTrack">
+
+        {% for cat in categories %}
+        <a href="{% url 'product_list' %}?category={{ cat.slug }}" class="cat-card {% cycle 'lg' 'md' 'sm' 'md' 'lg' 'sm' %}">
+          <div class="cat-bg-img" style="background-image:url('https://picsum.photos/600/800?random={{ forloop.counter|add:10 }}');background-color:#1e3a5f;"></div>
+          <div class="cat-overlay"></div>
+          <div class="cat-overlay-top"></div>
+          <div class="cat-badge">{{ cat.products.count }} items</div>
+          <div class="cat-label">
+            <h3><i class="bi {{ cat.icon|default:'bi-tag' }}"></i> {{ cat.name }}</h3>
+            <div class="cat-count">Explore collection</div>
+            <span class="cat-pill">Shop Now →</span>
+          </div>
+        </a>
+        {% empty %}
+        <!-- Fallback cards -->
+        {% for entry in "electronics,fashion,art,gaming,home,sports"|split:"," %}
+        <a href="{% url 'product_list' %}" class="cat-card {% cycle 'lg' 'md' 'sm' 'md' 'lg' 'sm' %}">
+          <div class="cat-bg-img" style="background-image:url('https://picsum.photos/600/800?random={{ forloop.counter|add:10 }}');background-color:#1e3a5f;"></div>
+          <div class="cat-overlay"></div>
+          <div class="cat-overlay-top"></div>
+          <div class="cat-badge">{{ forloop.counter|add:20 }} items</div>
+          <div class="cat-label">
+            <h3>{{ entry|capfirst }}</h3>
+            <div class="cat-count">Explore collection</div>
+            <span class="cat-pill">Shop Now →</span>
+          </div>
+        </a>
+        {% endfor %}
+        <!-- Static fallback if template tag not available -->
+        <a href="{% url 'product_list' %}" class="cat-card lg" style="display:none" id="fb1">
+          <div class="cat-bg-img" style="background-image:url('https://picsum.photos/600/800?random=11');"></div>
+          <div class="cat-overlay"></div><div class="cat-overlay-top"></div>
+          <div class="cat-badge">24 items</div>
+          <div class="cat-label"><h3>Electronics</h3><div class="cat-count">Explore collection</div><span class="cat-pill">Shop Now →</span></div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav dots -->
+  <div class="slider-nav" id="sliderDots"></div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FEATURED PRODUCTS
+════════════════════════════════════════════ -->
+<section class="feat-section">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div>
+      <div class="section-eyebrow">Hand Picked</div>
+      <h2 class="section-title">Featured Products</h2>
+    </div>
+    <a href="{% url 'product_list' %}" class="btn-outline-hero" style="font-size:14px;padding:10px 22px;">View All <i class="bi bi-arrow-right"></i></a>
+  </div>
+
+  <div class="product-grid">
+    {% for product in featured %}
+    <a href="{% url 'product_detail' product.id %}" class="fp-card">
+      <div class="fp-img">
+        <img src="https://picsum.photos/400/300?random={{ forloop.counter|add:30 }}" alt="{{ product.name }}">
+        {% if product.is_featured %}<div class="fp-tag"><i class="bi bi-star-fill"></i> Featured</div>{% endif %}
+      </div>
+      <div class="fp-body">
+        {% if product.category %}<div class="fp-cat">{{ product.category.name }}</div>{% endif %}
+        <div class="fp-name">{{ product.name }}</div>
+        <div class="fp-seller">by {{ product.seller.username }}{% if product.shop %} · {{ product.shop.name }}{% endif %}</div>
+        <div class="fp-footer">
+          <div class="fp-price">{{ product.price }} <span>{{ product.currency }}</span></div>
+          <div class="fp-stars">{% for i in "12345" %}{% if forloop.counter <= product.avg_rating %}★{% else %}<span style="opacity:.3;">★</span>{% endif %}{% endfor %}</div>
+        </div>
+      </div>
+    </a>
+    {% empty %}
+    {% for i in "1234" %}
+    <a href="{% url 'product_list' %}" class="fp-card">
+      <div class="fp-img">
+        <img src="https://picsum.photos/400/300?random={{ forloop.counter|add:40 }}" alt="Product">
+        <div class="fp-tag"><i class="bi bi-star-fill"></i> Featured</div>
+      </div>
+      <div class="fp-body">
+        <div class="fp-cat">Electronics</div>
+        <div class="fp-name">Sample Product {{ forloop.counter }}</div>
+        <div class="fp-seller">by seller</div>
+        <div class="fp-footer">
+          <div class="fp-price">0.05 <span>ETH</span></div>
+          <div class="fp-stars" style="color:#f59e0b;">★★★★☆</div>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+    {% endfor %}
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════════════════ -->
+<section class="hiw-section">
+  <div style="text-align:center;">
+    <div class="section-eyebrow" style="display:inline-block;">Process</div>
+    <h2 class="section-title" style="text-align:center;">How It Works</h2>
+    <p style="font-size:16px;color:var(--slate);text-align:center;max-width:480px;margin:10px auto 0;line-height:1.6;">Four simple steps — blockchain secured at every stage</p>
+  </div>
+  <div class="hiw-steps">
+    <div class="hiw-step"><div class="hiw-num">1</div><div class="hiw-title">Browse &amp; Buy</div><p class="hiw-desc">Find the product you want and click "Buy Now". Choose your quantity and proceed to checkout.</p></div>
+    <div class="hiw-step"><div class="hiw-num">2</div><div class="hiw-title">Fund Escrow</div><p class="hiw-desc">Your payment is locked in a blockchain smart contract — the seller can't access it yet.</p></div>
+    <div class="hiw-step"><div class="hiw-num">3</div><div class="hiw-title">Seller Ships</div><p class="hiw-desc">The seller ships your order with a tracking number. You'll get notified every step of the way.</p></div>
+    <div class="hiw-step"><div class="hiw-num">4</div><div class="hiw-title">Confirm &amp; Release</div><p class="hiw-desc">Confirm delivery and funds automatically release to the seller. Dispute if something's wrong.</p></div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     SELLER CTA
+════════════════════════════════════════════ -->
+<div class="seller-cta">
+  <h2>Ready to Start Selling?</h2>
+  <p>Open your shop in minutes. Every sale is protected by blockchain escrow — no chargebacks, no fraud.</p>
+  <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1;">
+    <a href="{% url 'supplier_dashboard' %}" class="btn-primary-hero"><i class="bi bi-shop-window"></i> Open Your Shop</a>
+    <a href="{% url 'product_list' %}" class="btn-outline-hero"><i class="bi bi-grid"></i> Browse First</a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+// ── PARTICLES ──────────────────────────────
+particlesJS('particles-js', {
+  particles: {
+    number: { value: 80, density: { enable: true, value_area: 900 } },
+    color: { value: ['#ffffff', '#000000', '#38bdf8', '#1a56db'] },
+    shape: { type: ['circle', 'triangle', 'polygon'], polygon: { nb_sides: 6 } },
+    opacity: {
+      value: 0.35, random: true,
+      anim: { enable: true, speed: 0.8, opacity_min: 0.05, sync: false }
+    },
+    size: {
+      value: 3, random: true,
+      anim: { enable: true, speed: 2, size_min: 0.5, sync: false }
+    },
+    line_linked: {
+      enable: true, distance: 130, color: '#38bdf8',
+      opacity: 0.12, width: 1
+    },
+    move: {
+      enable: true, speed: 0.8, direction: 'none',
+      random: true, straight: false, out_mode: 'bounce',
+      attract: { enable: false }
+    }
+  },
+  interactivity: {
+    detect_on: 'canvas',
+    events: {
+      onhover: { enable: true, mode: 'grab' },
+      onclick: { enable: true, mode: 'push' },
+      resize: true
+    },
+    modes: {
+      grab: { distance: 140, line_linked: { opacity: 0.40 } },
+      push: { particles_nb: 3 }
+    }
+  },
+  retina_detect: true
+});
+
+// ── DRAG-SCROLL SLIDER ─────────────────────
+(function() {
+  const vp = document.getElementById('catSlider');
+  if (!vp) return;
+  let isDown = false, startX, scrollLeft;
+
+  vp.addEventListener('mousedown', e => {
+    isDown = true; vp.classList.add('dragging');
+    startX = e.pageX - vp.offsetLeft;
+    scrollLeft = vp.scrollLeft;
+  });
+  vp.addEventListener('mouseleave', () => { isDown = false; vp.classList.remove('dragging'); });
+  vp.addEventListener('mouseup', () => { isDown = false; vp.classList.remove('dragging'); });
+  vp.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - vp.offsetLeft;
+    vp.scrollLeft = scrollLeft - (x - startX) * 1.4;
+  });
+
+  // Touch
+  let tStart;
+  vp.addEventListener('touchstart', e => { tStart = e.touches[0].clientX; scrollLeft = vp.scrollLeft; }, { passive: true });
+  vp.addEventListener('touchmove', e => {
+    const dx = tStart - e.touches[0].clientX;
+    vp.scrollLeft = scrollLeft + dx;
+  }, { passive: true });
+
+  // Dots
+  const track = document.getElementById('catTrack');
+  const dotsEl = document.getElementById('sliderDots');
+  if (track && dotsEl) {
+    const cards = track.querySelectorAll('.cat-card');
+    const total = Math.ceil(cards.length / 3) || 1;
+    for (let i = 0; i < total; i++) {
+      const d = document.createElement('button');
+      d.className = 'slider-dot' + (i === 0 ? ' active' : '');
+      d.onclick = () => {
+        const cardW = cards[0] ? cards[0].offsetWidth + 18 : 320;
+        vp.scrollTo({ left: i * cardW * 3, behavior: 'smooth' });
+      };
+      dotsEl.appendChild(d);
+    }
+    vp.addEventListener('scroll', () => {
+      const cardW = cards[0] ? cards[0].offsetWidth + 18 : 320;
+      const idx = Math.round(vp.scrollLeft / (cardW * 3));
+      dotsEl.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    });
+  }
+})();
+</script>
+
+{% endblock %}

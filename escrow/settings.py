@@ -131,8 +131,9 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'# settings.py
 
 BLOCKCHAIN_ABI_PATH = BASE_DIR / "contracts/MasterEscrowABI.json"
-MASTER_CONTRACT_ADDRESS = "0x4E768140f28928179626b79d49750AF793F8E9AF"
+MASTER_CONTRACT_ADDRESS ="0x5312FeeD19a787A1E4328968F325b9936d7168b4"
 GANACHE_RPC_URL = "http://127.0.0.1:7545"
+
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -142,3 +143,13 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'ashleymarize123@gmail.com'
 EMAIL_HOST_PASSWORD = 'ehsm fyex idra mwip'
 DEFAULT_FROM_EMAIL = 'ashleymarize123@gmail.com'
+
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+
+
+ESCROW_DEADLINE_DAYS = 7    # buyer must confirm within 7 days of shipping
+ESCROW_FEE_BPS       = 0    # 0 = no platform fee on Ganache; set e.g. 250 for 2.5% on mainnet

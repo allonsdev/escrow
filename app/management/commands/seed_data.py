@@ -2,236 +2,275 @@ import random
 import uuid
 from decimal import Decimal
 from django.core.management.base import BaseCommand
-from faker import Faker
+from django.utils.text import slugify
 from django.utils import timezone
 
-from app.models import (
-    User, UserWallet, UserContact, Product, Order,
-    EscrowTransaction, Payment, LogTrail,
-    UserEvent, SiteVisit, Dispute, DeliveryConfirmation
-)
+from app.models import *
 
-fake = Faker()
+
+# ─────────────────────────────
+# DATA POOLS (ZIMBABWEAN STYLE)
+# ─────────────────────────────
+FIRST_NAMES = ["Tendai","Nyasha","Tatenda","Kudakwashe","Rumbidzai","Farai","Tafadzwa","Chipo","Simbarashe","Kudzai"]
+LAST_NAMES = ["Moyo","Dube","Ndlovu","Sibanda","Gumbo","Khumalo","Chirwa","Zhou","Mlambo","Tshuma"]
+CITIES = ["Harare","Bulawayo","Gweru","Mutare","Masvingo"]
+
+PRODUCTS = [
+    ("iPhone 14 Pro Max", "smartphone"),
+    ("Samsung S23 Ultra", "smartphone"),
+    ("Google Pixel 8", "smartphone"),
+    ("MacBook Pro M2", "laptop"),
+    ("Dell XPS 13", "laptop"),
+    ("HP Pavilion Ryzen 7", "laptop"),
+    ("Sony Bravia 55-inch", "tv"),
+    ("Samsung QLED 65-inch", "tv"),
+    ("LG OLED C3", "tv"),
+    ("JBL Charge 5", "audio"),
+    ("AirPods Pro 2", "audio"),
+    ("Anker PowerBank 20k", "accessory"),
+]
+
+
+def rand_user():
+    f = random.choice(FIRST_NAMES)
+    l = random.choice(LAST_NAMES)
+    return {
+        "username": f.lower()+str(random.randint(100,999)),
+        "email": f"{f}.{l}@zimtech.co.zw",
+        "city": random.choice(CITIES),
+    }
 
 
 class Command(BaseCommand):
-    help = "Seed database with marketplace + escrow simulation data"
+    help = "Seed ALL models in marketplace"
 
     def handle(self, *args, **kwargs):
-        self.stdout.write("🌱 Seeding database...")
+        self.stdout.write("🚀 Seeding ALL models...")
 
-        # -----------------------------
-        # USERS
-        # -----------------------------
-        buyers = []
+        # ─────────────────────────
+        # CATEGORY TREE
+        # ─────────────────────────
+        electronics, _ = Category.objects.get_or_create(
+            name="Electronics",
+            defaults={"slug": "electronics"}
+        )
+
+        subcats = []
+        for name in ["Smartphones","Laptops","TVs","Audio","Accessories"]:
+            c, _ = Category.objects.get_or_create(
+                name=name,
+                defaults={"slug": slugify(name), "parent": electronics}
+            )
+            subcats.append(c)
+
+        # ─────────────────────────
+        # USERS + SHOPS + WALLETS
+        # ─────────────────────────
         sellers = []
+        buyers = []
 
-        for i in range(2):
-            buyers.append(User.objects.create_user(
-                username=f"buyer{i}",
-                password="password123",
+        for _ in range(6):
+            data = rand_user()
+
+            user = User.objects.create_user(
+                username=data["username"],
+                email=data["email"],
+                password="test1234",
                 is_buyer=True,
-                is_seller=False,
-                email=fake.email(),
-                phone_number=fake.phone_number(),
-                country="Zimbabwe",
-                city=fake.city(),
-                is_verified=True,
-                verification_level="basic",
-                trust_score=random.uniform(60, 95),
-            ))
-
-        for i in range(2):
-            sellers.append(User.objects.create_user(
-                username=f"seller{i}",
-                password="password123",
-                is_buyer=False,
                 is_seller=True,
-                email=fake.email(),
-                phone_number=fake.phone_number(),
+                city=data["city"],
                 country="Zimbabwe",
-                city=fake.city(),
-                is_verified=True,
-                verification_level="advanced",
-                trust_score=random.uniform(70, 98),
-            ))
-
-        users = buyers + sellers
-
-        # -----------------------------
-        # WALLETS + CONTACTS
-        # -----------------------------
-        for user in users:
-            UserWallet.objects.create(
-                user=user,
-                wallet_address=fake.sha1(),
-                private_key_encrypted=fake.sha256(),
-                balance_snapshot=Decimal(random.uniform(1, 50))
+                trust_score=random.randint(60,95),
+                total_logins=random.randint(1,50),
+                last_login_ip="102.130.1."+str(random.randint(1,200))
             )
 
-            for _ in range(3):
-                UserContact.objects.create(
-                    user=user,
-                    full_name=fake.name(),
-                    email=fake.email(),
-                    phone=fake.phone_number(),
-                    address_line1=fake.street_address(),
-                    city=fake.city(),
-                    country="Zimbabwe",
-                    postal_code=fake.postcode(),
-                    is_default_shipping=random.choice([True, False])
-                )
+            UserWallet.objects.create(
+                user=user,
+                wallet_address=f"0x{uuid.uuid4().hex[:40]}",
+                balance_snapshot=Decimal(random.randint(1,25))
+            )
 
-        # -----------------------------
-        # PRODUCTS
-        # -----------------------------
+            shop = Shop.objects.create(
+                seller=user,
+                name=f"{data['username']} Tech Store",
+                slug=slugify(data['username']+" store"),
+                city=data["city"],
+                country="Zimbabwe",
+                is_verified=True,
+                rating=Decimal(random.uniform(3.5, 5))
+            )
+
+            sellers.append((user, shop))
+
+        # Buyers
+        for _ in range(3):
+            data = rand_user()
+            buyer = User.objects.create_user(
+                username=data["username"],
+                email=data["email"],
+                password="test1234",
+                is_buyer=True,
+                city=data["city"],
+                country="Zimbabwe"
+            )
+            buyers.append(buyer)
+
+        # ─────────────────────────
+        # PRODUCTS + IMAGES + STOCK
+        # ─────────────────────────
         products = []
-        for _ in range(100):
-            products.append(Product.objects.create(
-                seller=random.choice(sellers),
-                name=fake.word(),
-                description=fake.text(),
-                price=Decimal(random.uniform(5, 200)),
-                currency="USD",
-                quantity_available=random.randint(1, 50),
-                category=random.choice(["Electronics", "Clothing", "Accessories"]),
-                condition=random.choice(["New", "Used"]),
-                total_views=random.randint(0, 1000),
-                total_purchases=random.randint(0, 100),
-                conversion_rate=random.uniform(0, 100)
-            ))
 
-        # -----------------------------
+        for name, _type in PRODUCTS:
+            seller, shop = random.choice(sellers)
+
+            p = Product.objects.create(
+                seller=seller,
+                shop=shop,
+                category=random.choice(subcats),
+                name=name,
+                slug=slugify(name+str(random.randint(1,999))),
+                description=f"Original {name} available in Zimbabwe.",
+                price=Decimal(random.randint(100,2000)),
+                currency="ETH",
+                quantity_available=random.randint(5,50),
+                condition="new",
+                total_views=random.randint(10,500),
+                avg_rating=Decimal(random.uniform(3,5))
+            )
+
+            # Image placeholder
+            ProductImage.objects.create(
+                product=p,
+                alt_text=name,
+                is_primary=True,
+                sort_order=1
+            )
+
+            StockLog.objects.create(
+                product=p,
+                user=seller,
+                action="restock",
+                quantity_change=20,
+                quantity_before=0,
+                quantity_after=20,
+                note="Initial stock load"
+            )
+
+            products.append(p)
+
+        # ─────────────────────────
         # ORDERS + ESCROW + PAYMENT
-        # -----------------------------
-        transactions = []
-
-        for _ in range(100):
+        # ─────────────────────────
+        for _ in range(5):
             buyer = random.choice(buyers)
             product = random.choice(products)
-            seller = product.seller
-
-            contact = UserContact.objects.filter(user=buyer).first()
 
             order = Order.objects.create(
                 buyer=buyer,
-                seller=seller,
+                seller=product.seller,
                 product=product,
-                quantity=random.randint(1, 3),
+                shop=product.shop,
+                quantity=1,
+                unit_price=product.price,
                 total_price=product.price,
-                currency="USD",
-                shipping_contact=contact,
+                currency="ETH",
                 status="paid"
             )
 
             escrow = EscrowTransaction.objects.create(
                 order=order,
                 buyer=buyer,
-                seller=seller,
-                amount=order.total_price,
-                currency="USD",
-                status=random.choice([
-                    "funded", "delivered", "released"
-                ]),
+                seller=product.seller,
+                amount=product.price,
+                currency="ETH",
                 blockchain_network="ganache",
-                contract_address=fake.sha1(),
-                deployment_tx_hash=fake.sha1(),
-                block_number=random.randint(1000, 5000),
-                gas_used=Decimal(random.uniform(0.001, 0.01)),
-                fraud_risk_score=random.uniform(0, 100)
+                status="funded"
             )
-
-            transactions.append(escrow)
 
             Payment.objects.create(
                 transaction=escrow,
                 payer=buyer,
-                amount=order.total_price,
-                currency="USD",
-                payment_method="crypto",
-                blockchain_tx_hash=fake.sha1(),
+                amount=product.price,
+                currency="ETH",
+                payment_method="crypto_wallet",
                 status="confirmed",
-                confirmations=random.randint(1, 12)
+                confirmations=12
             )
 
-            DeliveryConfirmation.objects.create(
-                transaction=escrow,
-                confirmed_by_buyer=random.choice([True, False]),
-                confirmed_by_system=True,
-                tracking_number=fake.uuid4(),
-                courier_name=random.choice(["DHL", "FedEx", "ZimPost"]),
-                delivery_proof_url=fake.url()
-            )
+        # ─────────────────────────
+        # REVIEWS
+        # ─────────────────────────
+        for product in products:
+            for buyer in buyers:
+                Review.objects.create(
+                    product=product,
+                    user=buyer,
+                    rating=random.randint(4,5),
+                    title="Great product",
+                    body="Works perfectly in Zimbabwe.",
+                    is_verified_purchase=True
+                )
 
-        # -----------------------------
+        # ─────────────────────────
         # DISPUTES
-        # -----------------------------
-        for _ in range(100):
-            tx = random.choice(transactions)
+        # ─────────────────────────
+        escrow_list = EscrowTransaction.objects.all()[:2]
 
+        for esc in escrow_list:
             Dispute.objects.create(
-                transaction=tx,
-                raised_by=random.choice([tx.buyer, tx.seller]),
-                reason=fake.sentence(),
-                evidence_url=fake.url(),
-                status=random.choice([
-                    "open", "under_review", "resolved", "rejected"
-                ]),
-                resolution_notes=fake.text(),
-                refund_amount=Decimal(random.uniform(0, float(tx.amount)))
+                transaction=esc,
+                raised_by=esc.buyer,
+                reason="Item not as described",
+                status="open"
             )
 
-        # -----------------------------
-        # LOGS
-        # -----------------------------
-        for _ in range(100):
+        # ─────────────────────────
+        # NOTIFICATIONS
+        # ─────────────────────────
+        for user in User.objects.all():
+            Notification.objects.create(
+                user=user,
+                type="system",
+                title="Welcome to ZimTech Marketplace",
+                message="Your account is ready."
+            )
+
+        # ─────────────────────────
+        # LOG TRAILS
+        # ─────────────────────────
+        for user in User.objects.all():
             LogTrail.objects.create(
-                user=random.choice(users),
-                action_type=random.choice([
-                    "LOGIN", "ORDER_CREATED", "PAYMENT_SENT",
-                    "ESCROW_RELEASED", "DISPUTE_OPENED"
-                ]),
-                related_transaction=random.choice(transactions),
-                description=fake.sentence(),
-                ip_address=fake.ipv4(),
-                user_agent=fake.user_agent(),
-                metadata={"device": fake.word()}
+                user=user,
+                action_type="LOGIN",
+                description="User logged in"
             )
 
-        # -----------------------------
-        # USER EVENTS
-        # -----------------------------
-        for _ in range(100):
-            UserEvent.objects.create(
-                user=random.choice(users),
-                event_type=random.choice([
-                    "product_view",
-                    "checkout_start",
-                    "payment_attempt",
-                    "delivery_confirmed"
-                ]),
-                related_object_id=uuid.uuid4(),
-                metadata={"info": fake.word()},
-                ip_address=fake.ipv4()
-            )
-
-        # -----------------------------
+        # ─────────────────────────
         # SITE VISITS
-        # -----------------------------
-        for _ in range(100):
+        # ─────────────────────────
+        for _ in range(10):
             SiteVisit.objects.create(
-                user=random.choice(users),
-                session_id=fake.uuid4(),
-                page_url=f"/product/{fake.uuid4()}",
-                referrer=fake.url(),
-                ip_address=fake.ipv4(),
-                device_type=random.choice(["mobile", "desktop"]),
-                browser=random.choice(["Chrome", "Firefox", "Edge"]),
-                os=random.choice(["Windows", "Android", "iOS"]),
-                duration_seconds=random.randint(5, 300),
+                session_id=str(uuid.uuid4()),
+                page_url="/products",
+                device_type="mobile",
+                browser="Chrome",
+                os="Android",
                 country="Zimbabwe",
-                city=fake.city(),
-                is_authenticated=random.choice([True, False])
+                city=random.choice(CITIES),
+                is_authenticated=True
             )
 
-        self.stdout.write(self.style.SUCCESS("✅ Database seeded successfully!"))
+        # ─────────────────────────
+        # DELIVERY CONFIRMATION
+        # ─────────────────────────
+        for esc in EscrowTransaction.objects.all():
+            DeliveryConfirmation.objects.create(
+                transaction=esc,
+                confirmed_by_buyer=True,
+                confirmed_by_system=True,
+                tracking_number=f"TRK{random.randint(10000,99999)}",
+                courier_name="ZimPost"
+            )
+
+        self.stdout.write(self.style.SUCCESS("✅ ALL MODELS SEEDED SUCCESSFULLY"))

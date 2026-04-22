@@ -1,356 +1,214 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+{% extends "base.html" %}
+{% block title %}My Account — MarketPro{% endblock %}
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% block extra_head %}
+<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+{% endblock %}
 
-<title>Dashboard</title>
+{% block content %}
+<div style="max-width:1200px;margin:0 auto;padding:24px 1.5rem 4rem;">
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <div class="page-header">
+    <div>
+      <h1><i class="bi bi-person-circle" style="color:#1a56db;"></i> My Account</h1>
+      <p>Manage your wallet, orders, and activity</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="{% url 'buyer_dashboard' %}" class="btn-mp btn-mp-outline"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      {% if request.user.is_seller %}
+      <a href="{% url 'supplier_dashboard' %}" class="btn-mp btn-mp-primary"><i class="bi bi-shop-window"></i> Seller Dashboard</a>
+      {% else %}
+      <a href="{% url 'supplier_dashboard' %}" class="btn-mp btn-mp-light"><i class="bi bi-shop-window"></i> Become a Seller</a>
+      {% endif %}
+    </div>
+  </div>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <!-- TOP ROW -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:28px;">
 
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <!-- Wallet -->
+    <div class="mp-card" style="background:linear-gradient(135deg,#1a56db,#0ea5e9);color:#fff;border:none;overflow:hidden;position:relative;">
+      <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;background:rgba(255,255,255,.07);border-radius:50%;"></div>
+      <div class="mp-card-body">
+        <div style="font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#bae6fd;margin-bottom:10px;">
+          <i class="bi bi-wallet2"></i> Wallet Balance
+        </div>
+        <div style="font-size:38px;font-weight:800;line-height:1;margin-bottom:8px;">
+          {% if wallet %}{{ wallet.balance_snapshot|floatformat:4 }}{% else %}0{% endif %}
+          <span style="font-size:18px;font-weight:600;color:#bae6fd;">ETH</span>
+        </div>
+        {% if wallet %}
+        <div style="font-size:12px;color:#bae6fd;margin-top:10px;word-break:break-all;font-family:monospace;background:rgba(0,0,0,.15);padding:8px 10px;border-radius:8px;">
+          {{ wallet.wallet_address|truncatechars:28 }}
+        </div>
+        <div style="font-size:12px;color:#93c5fd;margin-top:8px;display:flex;justify-content:space-between;">
+          <span>Network: {{ wallet.blockchain_network }}</span>
+        </div>
+        {% else %}
+        <div style="font-size:14px;color:#bae6fd;margin-top:8px;">No wallet connected</div>
+        {% endif %}
+      </div>
+    </div>
 
+    <!-- Profile -->
+    <div class="mp-card">
+      <div class="mp-card-body">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+          <div style="width:52px;height:52px;background:linear-gradient(135deg,#1a56db,#0ea5e9);border-radius:14px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:800;flex-shrink:0;">
+            {{ request.user.username|first|upper }}
+          </div>
+          <div>
+            <div style="font-size:18px;font-weight:800;color:#1e293b;">{{ request.user.username }}</div>
+            <div style="font-size:14px;color:#64748b;">{{ request.user.email }}</div>
+            <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;">
+              {% if request.user.is_buyer %}<span class="role-badge role-buyer" style="font-size:10px;"><i class="bi bi-cart"></i> Buyer</span>{% endif %}
+              {% if request.user.is_seller %}<span class="role-badge role-seller" style="font-size:10px;"><i class="bi bi-shop"></i> Seller</span>{% endif %}
+              {% if request.user.is_staff %}<span class="role-badge role-admin" style="font-size:10px;"><i class="bi bi-shield-fill"></i> Admin</span>{% endif %}
+            </div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px;">
+          <div style="background:#f0f7ff;border-radius:8px;padding:10px;text-align:center;">
+            <div style="font-weight:800;color:#1a56db;font-size:20px;">{{ request.user.trust_score }}</div>
+            <div style="color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Trust Score</div>
+          </div>
+          <div style="background:#f0fdf4;border-radius:8px;padding:10px;text-align:center;">
+            <div style="font-weight:800;color:#16a34a;font-size:20px;">{{ request.user.successful_transactions }}</div>
+            <div style="color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:.4px;">Completed</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<style>
+    <!-- Activity -->
+    <div class="mp-card">
+      <div class="mp-card-body">
+        <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:16px;"><i class="bi bi-graph-up text-blue"></i> Activity Summary</div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:15px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid #f0f7ff;">
+            <span style="color:#64748b;">Total Purchases</span>
+            <span style="font-weight:700;color:#1a56db;">{{ purchases.count }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid #f0f7ff;">
+            <span style="color:#64748b;">Total Sales</span>
+            <span style="font-weight:700;color:#16a34a;">{{ sales.count }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid #f0f7ff;">
+            <span style="color:#64748b;">Disputes</span>
+            <span style="font-weight:700;color:#ef4444;">{{ request.user.disputed_transactions }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:#64748b;">Verification</span>
+            <span class="mp-badge {% if request.user.is_verified %}badge-green{% else %}badge-gray{% endif %}" style="font-size:11px;">{{ request.user.get_verification_level_display }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-body{
-background:#f3f4f6;
-font-family:'Segoe UI',sans-serif;
-}
+  <!-- NOTIFICATIONS -->
+  {% if notifications %}
+  <div class="mp-card" style="margin-bottom:24px;">
+    <div class="mp-card-header">
+      <h3 style="font-size:17px;font-weight:700;margin:0;"><i class="bi bi-bell text-blue"></i> Recent Notifications</h3>
+      <span class="mp-badge badge-blue" style="font-size:11px;">{{ notifications|length }}</span>
+    </div>
+    <div>
+      {% for n in notifications|slice:":6" %}
+      <div style="padding:14px 24px;{% if not forloop.last %}border-bottom:1px solid #f0f7ff;{% endif %}display:flex;align-items:flex-start;gap:12px;">
+        <div style="width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:15px;
+          {% if n.type == 'order' %}background:#dbeafe;color:#1a56db;{% elif n.type == 'payment' %}background:#dcfce7;color:#16a34a;{% elif n.type == 'dispute' %}background:#fee2e2;color:#ef4444;{% else %}background:#f1f5f9;color:#475569;{% endif %}">
+          <i class="bi {% if n.type == 'order' %}bi-bag{% elif n.type == 'payment' %}bi-wallet2{% elif n.type == 'dispute' %}bi-exclamation-triangle{% else %}bi-bell{% endif %}"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-weight:700;color:#1e293b;font-size:15px;">{{ n.title }}</div>
+          <div style="font-size:13px;color:#64748b;margin-top:2px;">{{ n.message }}</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:4px;">{{ n.created_at|timesince }} ago</div>
+        </div>
+        {% if n.link %}<a href="{{ n.link }}" class="btn-mp btn-mp-light" style="padding:6px 14px;font-size:13px;flex-shrink:0;">View</a>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
-/* NAVBAR */
+  <!-- PURCHASES -->
+  <div class="mp-card" style="margin-bottom:24px;">
+    <div class="mp-card-header">
+      <h3 style="font-size:17px;font-weight:700;margin:0;"><i class="bi bi-bag text-blue"></i> My Purchases</h3>
+    </div>
+    <div class="mp-card-body" style="padding:0;">
+      <table class="mp-table" id="purchasesTable">
+        <thead><tr><th>Product</th><th>Seller</th><th>Qty</th><th>Amount</th><th>Status</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+          {% for order in purchases %}
+          <tr>
+            <td style="font-weight:600;">{{ order.product.name }}</td>
+            <td style="color:#64748b;">{{ order.seller.username }}</td>
+            <td style="color:#64748b;">{{ order.quantity }}</td>
+            <td style="font-weight:700;color:#1a56db;">{{ order.total_price }} {{ order.currency }}</td>
+            <td>
+              <span class="mp-badge {% if order.status == 'completed' %}badge-green{% elif order.status == 'shipped' %}badge-yellow{% elif order.status == 'paid' %}badge-sky{% elif order.status == 'disputed' %}badge-red{% elif order.status == 'refunded' %}badge-purple{% else %}badge-gray{% endif %}" style="font-size:11px;">
+                {{ order.get_status_display }}
+              </span>
+            </td>
+            <td style="font-size:13px;color:#94a3b8;">{{ order.created_at|date:"M d, Y" }}</td>
+            <td><a href="{% url 'order_detail' order.id %}" class="btn-mp btn-mp-light" style="padding:7px 14px;font-size:13px;">View</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="empty-state" style="padding:40px;">
+            <i class="bi bi-bag"></i><p>No purchases yet</p>
+            <a href="{% url 'product_list' %}" class="btn-mp btn-mp-primary" style="font-size:14px;margin-top:8px;">Start Shopping</a>
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-.navbar{
-background:#131921;
-}
-
-.navbar .nav-link,
-.navbar .navbar-brand{
-color:white !important;
-}
-
-/* CARD */
-
-.dashboard-card{
-background:white;
-border-radius:14px;
-padding:25px;
-box-shadow:0 10px 25px rgba(0,0,0,0.05);
-}
-
-/* WALLET */
-
-.wallet-balance{
-font-size:2rem;
-font-weight:bold;
-color:#b12704;
-}
-
-/* TABLE */
-
-.table thead{
-background:#fafafa;
-}
-
-/* BUTTON */
-
-.btn-amazon{
-background:#ffd814;
-border:none;
-}
-
-.btn-amazon:hover{
-background:#f7ca00;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<!-- NAVBAR -->
-
-<nav class="navbar navbar-expand-lg">
-
-<div class="container-fluid px-4">
-
-<a class="navbar-brand fw-bold" href="/">MarketPro</a>
-
-<ul class="navbar-nav ms-auto">
-
-<li class="nav-item">
-<a class="nav-link" href="/dashboard/">Dashboard</a>
-</li>
-
-<li class="nav-item">
-<a class="nav-link" href="#"><i class="bi bi-person"></i> {{ request.user.username }}</a>
-</li>
-
-</ul>
+  <!-- SALES (only if seller) -->
+  {% if request.user.is_seller %}
+  <div class="mp-card">
+    <div class="mp-card-header">
+      <h3 style="font-size:17px;font-weight:700;margin:0;"><i class="bi bi-box-seam text-blue"></i> My Sales</h3>
+    </div>
+    <div class="mp-card-body" style="padding:0;">
+      <table class="mp-table" id="salesTable">
+        <thead><tr><th>Product</th><th>Buyer</th><th>Qty</th><th>Amount</th><th>Status</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+          {% for order in sales %}
+          <tr>
+            <td style="font-weight:600;">{{ order.product.name }}</td>
+            <td style="color:#64748b;">{{ order.buyer.username }}</td>
+            <td style="color:#64748b;">{{ order.quantity }}</td>
+            <td style="font-weight:700;color:#16a34a;">{{ order.total_price }} {{ order.currency }}</td>
+            <td>
+              <span class="mp-badge {% if order.status == 'completed' %}badge-green{% elif order.status == 'shipped' %}badge-yellow{% elif order.status == 'paid' %}badge-sky{% elif order.status == 'disputed' %}badge-red{% else %}badge-gray{% endif %}" style="font-size:11px;">
+                {{ order.get_status_display }}
+              </span>
+            </td>
+            <td style="font-size:13px;color:#94a3b8;">{{ order.created_at|date:"M d, Y" }}</td>
+            <td><a href="{% url 'order_detail' order.id %}" class="btn-mp btn-mp-light" style="padding:7px 14px;font-size:13px;">Manage</a></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="empty-state" style="padding:40px;"><i class="bi bi-box-seam"></i><p>No sales yet</p></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
 
 </div>
-</nav>
+{% endblock %}
 
-
-<div class="container mt-4">
-
-<div class="row g-4">
-
-<!-- WALLET -->
-
-<div class="col-md-4">
-
-<div class="dashboard-card">
-
-<h5 class="mb-3">
-<i class="bi bi-wallet2"></i> Wallet
-</h5>
-
-<p class="text-muted">Current Balance</p>
-
-<div class="wallet-balance">
-
-{% if wallet %}
-{{ wallet.balance_snapshot }} ETH
-{% else %}
-0 ETH
-{% endif %}
-
-</div>
-
-<hr>
-
-<p class="small text-muted">
-
-Address:<br>
-
-{% if wallet %}
-{{ wallet.wallet_address|truncatechars:30 }}
-{% endif %}
-
-</p>
-
-</div>
-
-</div>
-
-
-<!-- USER INFO -->
-
-<div class="col-md-4">
-
-<div class="dashboard-card">
-
-<h5><i class="bi bi-person"></i> Profile</h5>
-
-<hr>
-
-<p><strong>Username:</strong> {{ request.user.username }}</p>
-
-<p><strong>Country:</strong> {{ request.user.country }}</p>
-
-<p><strong>Trust Score:</strong> {{ request.user.trust_score }}</p>
-
-<p><strong>Transactions:</strong> {{ request.user.successful_transactions }}</p>
-
-</div>
-
-</div>
-
-
-<!-- STATS -->
-
-<div class="col-md-4">
-
-<div class="dashboard-card">
-
-<h5><i class="bi bi-graph-up"></i> Activity</h5>
-
-<hr>
-
-<p><strong>Purchases:</strong> {{ purchases|length }}</p>
-
-<p><strong>Sales:</strong> {{ sales|length }}</p>
-
-<p><strong>Disputes:</strong> {{ request.user.disputed_transactions }}</p>
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<!-- PURCHASES -->
-
-<div class="dashboard-card mt-4">
-
-<h5 class="mb-3">
-
-<i class="bi bi-bag"></i> My Purchases
-
-</h5>
-
-<table id="purchaseTable" class="table table-striped">
-
-<thead>
-
-<tr>
-
-<th>Product</th>
-<th>Seller</th>
-<th>Price</th>
-<th>Status</th>
-<th>Date</th>
-<th></th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for order in purchases %}
-
-<tr>
-
-<td>{{ order.product.name }}</td>
-
-<td>{{ order.seller.username }}</td>
-
-<td>{{ order.total_price }} {{ order.currency }}</td>
-
-<td>
-
-<span class="badge bg-secondary">
-
-{{ order.status }}
-
-</span>
-
-</td>
-
-<td>{{ order.created_at|date:"Y-m-d" }}</td>
-
-<td>
-
-<a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-amazon">
-
-View
-
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-
-
-<!-- SALES -->
-
-<div class="dashboard-card mt-4">
-
-<h5 class="mb-3">
-
-<i class="bi bi-box-seam"></i> Products Sold
-
-</h5>
-
-<table id="salesTable" class="table table-striped">
-
-<thead>
-
-<tr>
-
-<th>Product</th>
-<th>Buyer</th>
-<th>Price</th>
-<th>Status</th>
-<th>Date</th>
-<th></th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-{% for order in sales %}
-
-<tr>
-
-<td>{{ order.product.name }}</td>
-
-<td>{{ order.buyer.username }}</td>
-
-<td>{{ order.total_price }} {{ order.currency }}</td>
-
-<td>
-
-<span class="badge bg-primary">
-
-{{ order.status }}
-
-</span>
-
-</td>
-
-<td>{{ order.created_at|date:"Y-m-d" }}</td>
-
-<td>
-
-<a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-amazon">
-
-View
-
-</a>
-
-</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-
-</div>
-
-
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-
+{% block extra_js %}
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
 <script>
-
 $(document).ready(function(){
-
-$('#purchaseTable').DataTable();
-
-$('#salesTable').DataTable();
-
+  $('#purchasesTable').DataTable({ pageLength: 10, order: [[5,'desc']] });
+  $('#salesTable').DataTable({ pageLength: 10, order: [[5,'desc']] });
 });
-
 </script>
-
-</body>
-
-</html>
+{% endblock %}

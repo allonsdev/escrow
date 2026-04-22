@@ -1,0 +1,52 @@
+<!-- Edit Shop Modal -->
+<div id="editShopModal" class="mp-modal-backdrop" style="display:none;">
+  <div class="mp-modal-box" style="max-width:560px;">
+    <div class="modal-header">
+      <h5 class="modal-title"><i class="bi bi-pencil"></i> Edit Shop</h5>
+      <button onclick="hideModal('editShopModal')" class="btn-close"></button>
+    </div>
+    <form method="post" action="{% url 'update_shop' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="mb-3" style="grid-column:1/-1;">
+            <label class="mp-label">Shop Name *</label>
+            <input type="text" name="name" class="mp-form-control" value="{{ shop.name }}" required>
+          </div>
+          <div class="mb-3" style="grid-column:1/-1;">
+            <label class="mp-label">Description</label>
+            <textarea name="description" class="mp-form-control" rows="3">{{ shop.description }}</textarea>
+          </div>
+          <div class="mb-3">
+            <label class="mp-label">Email</label>
+            <input type="email" name="email" class="mp-form-control" value="{{ shop.email }}">
+          </div>
+          <div class="mb-3">
+            <label class="mp-label">Phone</label>
+            <input type="text" name="phone" class="mp-form-control" value="{{ shop.phone }}">
+          </div>
+          <div class="mb-3">
+            <label class="mp-label">City</label>
+            <input type="text" name="city" class="mp-form-control" value="{{ shop.city }}">
+          </div>
+          <div class="mb-3">
+            <label class="mp-label">Country</label>
+            <input type="text" name="country" class="mp-form-control" value="{{ shop.country }}">
+          </div>
+          <div class="mb-3" style="grid-column:1/-1;">
+            <label class="mp-label">Address</label>
+            <input type="text" name="address" class="mp-form-control" value="{{ shop.address }}">
+          </div>
+          <div class="mb-3" style="grid-column:1/-1;">
+            <label class="mp-label">Website</label>
+            <input type="url" name="website" class="mp-form-control" value="{{ shop.website }}" placeholder="https://...">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-mp btn-mp-light" onclick="hideModal('editShopModal')">Cancel</button>
+        <button type="submit" class="btn-mp btn-mp-primary"><i class="bi bi-save"></i> Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>

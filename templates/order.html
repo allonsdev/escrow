@@ -1,406 +1,265 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Order Detail</title>
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id|stringformat:"s"|slice:":8" }} — MarketPro{% endblock %}
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+{% block content %}
+<div style="max-width:920px;margin:0 auto;padding:32px 1.5rem 4rem;">
 
-<style>
+  <a href="{% url 'wallet' %}" style="display:inline-flex;align-items:center;gap:6px;color:#64748b;text-decoration:none;font-size:15px;font-weight:500;margin-bottom:24px;transition:color .2s;" onmouseover="this.style.color='#1a56db'" onmouseout="this.style.color='#64748b'">
+    <i class="bi bi-arrow-left"></i> Back to Account
+  </a>
 
-body{
-background:#f3f4f6;
-font-family:'Segoe UI',sans-serif;
-}
+  <!-- HEADER -->
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:28px;">
+    <div>
+      <h1 style="font-size:24px;font-weight:800;color:#1e293b;margin:0 0 4px;">
+        <i class="bi bi-receipt" style="color:#1a56db;"></i>
+        Order <span style="font-family:monospace;font-size:20px;">#{{ order.id|stringformat:"s"|slice:":8" }}</span>
+      </h1>
+      <p style="color:#64748b;margin:0;font-size:15px;">Placed {{ order.created_at|date:"M d, Y \a\t g:i A" }}</p>
+    </div>
+    <span class="mp-badge {% if order.status == 'completed' %}badge-green{% elif order.status == 'paid' %}badge-sky{% elif order.status == 'shipped' %}badge-yellow{% elif order.status == 'disputed' %}badge-red{% elif order.status == 'refunded' %}badge-purple{% elif order.status == 'cancelled' %}badge-gray{% else %}badge-blue{% endif %}" style="font-size:14px;padding:8px 18px;">
+      <i class="bi {% if order.status == 'completed' %}bi-check-circle-fill{% elif order.status == 'paid' %}bi-wallet2{% elif order.status == 'shipped' %}bi-truck{% elif order.status == 'disputed' %}bi-exclamation-triangle-fill{% elif order.status == 'refunded' %}bi-arrow-counterclockwise{% else %}bi-clock{% endif %}"></i>
+      {{ order.get_status_display }}
+    </span>
+  </div>
 
-/* NAVBAR */
-.navbar{
-background:#131921;
-}
-.navbar .nav-link,
-.navbar .navbar-brand{
-color:white !important;
-}
+  <!-- TIMELINE -->
+  <div class="mp-card" style="margin-bottom:24px;overflow:hidden;">
+    <div style="padding:20px 28px;border-bottom:1px solid var(--mp-border);background:#f8faff;">
+      <h3 style="font-size:15px;font-weight:700;margin:0;"><i class="bi bi-diagram-3 text-blue"></i> Order Progress</h3>
+    </div>
+    <div style="padding:32px 28px;">
+      <div class="order-timeline">
+        <div class="timeline-step done">
+          <div class="timeline-dot"><i class="bi bi-plus"></i></div>
+          <div class="timeline-label">Created</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ order.created_at|date:"M d" }}</div>
+        </div>
+        <div class="timeline-step {% if order.status != 'escrow_created' %}done{% elif order.status == 'escrow_created' %}active{% endif %}">
+          <div class="timeline-dot">
+            {% if order.status != 'escrow_created' %}<i class="bi bi-check"></i>{% else %}<i class="bi bi-wallet2"></i>{% endif %}
+          </div>
+          <div class="timeline-label">Funded</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Escrow</div>
+        </div>
+        <div class="timeline-step {% if order.status == 'shipped' %}active{% elif order.status == 'completed' %}done{% endif %}">
+          <div class="timeline-dot">
+            {% if order.status == 'completed' %}<i class="bi bi-check"></i>{% elif order.status == 'shipped' %}<i class="bi bi-truck"></i>{% else %}3{% endif %}
+          </div>
+          <div class="timeline-label">Shipped</div>
+          {% if order.shipped_at %}<div style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ order.shipped_at|date:"M d" }}</div>{% endif %}
+        </div>
+        <div class="timeline-step {% if order.status == 'completed' %}active{% endif %}">
+          <div class="timeline-dot">
+            {% if order.status == 'completed' %}<i class="bi bi-check"></i>{% else %}4{% endif %}
+          </div>
+          <div class="timeline-label">Delivered</div>
+          {% if order.completed_at %}<div style="font-size:11px;color:#94a3b8;margin-top:2px;">{{ order.completed_at|date:"M d" }}</div>{% endif %}
+        </div>
+      </div>
 
-/* CARD */
-.order-card{
-background:white;
-border-radius:14px;
-padding:30px;
-box-shadow:0 10px 25px rgba(0,0,0,0.05);
-}
+      {% if order.tracking_number %}
+      <div style="margin-top:20px;background:#f0f7ff;border-radius:10px;padding:12px 16px;border:1px solid #dbeafe;display:flex;align-items:center;gap:10px;font-size:14px;">
+        <i class="bi bi-truck text-blue"></i>
+        <span style="color:#64748b;">Tracking Number:</span>
+        <strong style="font-family:monospace;">{{ order.tracking_number }}</strong>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 
-/* PRICE */
-.price{
-font-size:2rem;
-font-weight:bold;
-color:#b12704;
-}
+  <!-- MAIN GRID -->
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;">
 
-.price-box{
-text-align:right;
-}
+    <!-- LEFT -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
 
-/* STATUS BADGE */
-.status-badge{
-padding:8px 18px;
-border-radius:50px;
-font-weight:500;
-font-size:0.9rem;
-}
+      <!-- Product -->
+      <div class="mp-card">
+        <div class="mp-card-header">
+          <h3 style="font-size:15px;font-weight:700;margin:0;"><i class="bi bi-box-seam text-blue"></i> Product</h3>
+        </div>
+        <div class="mp-card-body" style="display:flex;gap:16px;align-items:center;">
+          <div style="width:80px;height:80px;border-radius:10px;overflow:hidden;border:1px solid var(--mp-border);flex-shrink:0;background:#f0f7ff;">
+            <img src="https://picsum.photos/80/80?random={{ order.id|stringformat:"s"|slice:":4" }}" style="width:100%;height:100%;object-fit:cover;">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:17px;font-weight:700;color:#1e293b;margin-bottom:4px;">{{ order.product.name }}</div>
+            <div style="font-size:14px;color:#64748b;margin-bottom:4px;">
+              Qty: <strong>{{ order.quantity }}</strong> × <strong style="color:#1a56db;">{{ order.unit_price }} {{ order.currency }}</strong>
+            </div>
+            {% if order.product.category %}<span class="mp-badge badge-sky" style="font-size:11px;">{{ order.product.category.name }}</span>{% endif %}
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:13px;color:#94a3b8;">Total</div>
+            <div style="font-size:26px;font-weight:800;color:#1a56db;">{{ order.total_price }}</div>
+            <div style="font-size:13px;color:#94a3b8;">{{ order.currency }}</div>
+          </div>
+        </div>
+      </div>
 
-/* TIMELINE */
-.timeline{
-border-left:3px solid #e5e5e5;
-padding-left:25px;
-}
+      <!-- Parties -->
+      <div class="mp-card">
+        <div class="mp-card-header">
+          <h3 style="font-size:15px;font-weight:700;margin:0;"><i class="bi bi-people text-blue"></i> Parties</h3>
+        </div>
+        <div class="mp-card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="background:#f0f7ff;border-radius:10px;padding:14px;">
+            <div style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Buyer</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;background:#dbeafe;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#1a56db;font-size:14px;">{{ order.buyer.username|first|upper }}</div>
+              <div>
+                <div style="font-weight:700;color:#1e293b;font-size:15px;">{{ order.buyer.username }}</div>
+                {% if request.user == order.buyer %}<span style="font-size:12px;color:#16a34a;font-weight:600;">You</span>{% endif %}
+              </div>
+            </div>
+          </div>
+          <div style="background:#f0f7ff;border-radius:10px;padding:14px;">
+            <div style="font-size:12px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Seller</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;background:#dcfce7;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#16a34a;font-size:14px;">{{ order.seller.username|first|upper }}</div>
+              <div>
+                <div style="font-weight:700;color:#1e293b;font-size:15px;">{{ order.seller.username }}</div>
+                {% if order.shop %}<div style="font-size:12px;color:#1a56db;font-weight:600;">{{ order.shop.name }}</div>{% endif %}
+                {% if request.user == order.seller %}<span style="font-size:12px;color:#16a34a;font-weight:600;">You</span>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-.timeline-step{
-position:relative;
-margin-bottom:18px;
-font-size:0.95rem;
-}
+      <!-- Escrow Details -->
+      {% if order.escrowtransaction %}
+      <div class="mp-card">
+        <div class="mp-card-header">
+          <h3 style="font-size:15px;font-weight:700;margin:0;"><i class="bi bi-shield-check text-blue"></i> Escrow Details</h3>
+        </div>
+        <div class="mp-card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px;">
+            <div>
+              <div style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:3px;">Escrow Status</div>
+              <span class="mp-badge {% if order.escrowtransaction.status == 'released' %}badge-green{% elif order.escrowtransaction.status == 'disputed' %}badge-red{% elif order.escrowtransaction.status == 'paid' %}badge-sky{% elif order.escrowtransaction.status == 'refunded' %}badge-purple{% else %}badge-gray{% endif %}" style="font-size:11px;">{{ order.escrowtransaction.status|title }}</span>
+            </div>
+            <div>
+              <div style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:3px;">Locked Amount</div>
+              <strong style="color:#1a56db;">{{ order.escrowtransaction.amount }} {{ order.escrowtransaction.currency }}</strong>
+            </div>
+            {% if order.escrowtransaction.deployment_tx_hash %}
+            <div style="grid-column:1/-1;">
+              <div style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;margin-bottom:3px;">Transaction Hash</div>
+              <code style="font-size:12px;color:#1e293b;word-break:break-all;background:#f8faff;padding:8px 12px;border-radius:8px;display:block;border:1px solid #dbeafe;">{{ order.escrowtransaction.deployment_tx_hash|slice:":42" }}...</code>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
 
-.timeline-step::before{
-content:"";
-width:12px;
-height:12px;
-background:#ccc;
-border-radius:50%;
-position:absolute;
-left:-31px;
-top:5px;
-}
+    </div>
 
-.timeline-step.done{
-color:green;
-}
+    <!-- RIGHT: ACTIONS -->
+    <div style="position:sticky;top:80px;">
+      <div class="mp-card">
+        <div class="mp-card-header">
+          <h3 style="font-size:15px;font-weight:700;margin:0;"><i class="bi bi-lightning text-blue"></i> Actions</h3>
+        </div>
+        <div class="mp-card-body" style="display:flex;flex-direction:column;gap:10px;">
 
-.timeline-step.done::before{
-background:green;
-}
+          <!-- BUYER: Fund Escrow -->
+          {% if order.status == 'escrow_created' and request.user == order.buyer %}
+          <div style="background:#f0f7ff;border:1px solid #dbeafe;border-radius:10px;padding:12px 14px;font-size:14px;color:#475569;margin-bottom:4px;line-height:1.5;">
+            <i class="bi bi-info-circle text-blue"></i>
+            Fund the escrow to begin your order. Payment is locked in the smart contract until you confirm delivery.
+          </div>
+          <form method="post" action="{% url 'fund_escrow' order.escrowtransaction.id %}">
+            {% csrf_token %}
+            <button class="btn-mp btn-mp-success" style="width:100%;justify-content:center;font-size:15px;padding:13px;"
+                    data-swal-confirm="Fund escrow with {{ order.total_price }} {{ order.currency }}?">
+              <i class="bi bi-wallet2"></i> Fund Escrow · {{ order.total_price }} {{ order.currency }}
+            </button>
+          </form>
+          {% endif %}
 
-.timeline-step.pending{
-color:#999;
-}
+          <!-- SELLER: Ship Order -->
+          {% if order.status == 'paid' and request.user == order.seller %}
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;font-size:14px;color:#15803d;margin-bottom:4px;line-height:1.5;">
+            <i class="bi bi-check-circle-fill"></i>
+            Payment received in escrow. Ship the order and enter a tracking number below.
+          </div>
+          <form method="post" action="{% url 'release_delivery' order.id %}" style="display:flex;flex-direction:column;gap:8px;">
+            {% csrf_token %}
+            <div>
+              <label class="mp-label">Tracking Number</label>
+              <input type="text" name="tracking_number" class="mp-form-control" placeholder="Optional tracking number">
+            </div>
+            <button class="btn-mp btn-mp-warning" style="width:100%;justify-content:center;font-size:15px;padding:13px;">
+              <i class="bi bi-truck"></i> Mark as Shipped
+            </button>
+          </form>
+          {% endif %}
 
-/* BUTTONS */
+          <!-- BUYER: Confirm Delivery -->
+          {% if order.status == 'shipped' and request.user == order.buyer %}
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;font-size:14px;color:#15803d;margin-bottom:4px;line-height:1.5;">
+            <i class="bi bi-truck"></i> Your order has been shipped.
+            {% if order.tracking_number %}Tracking: <strong style="font-family:monospace;">{{ order.tracking_number }}</strong>{% endif %}
+          </div>
+          <form method="post" action="{% url 'confirm_delivery' order.id %}">
+            {% csrf_token %}
+            <button class="btn-mp btn-mp-primary" style="width:100%;justify-content:center;font-size:15px;padding:13px;"
+                    data-swal-confirm="Confirm receipt and release payment to seller? This cannot be undone.">
+              <i class="bi bi-check-circle"></i> Confirm Delivery & Release Funds
+            </button>
+          </form>
+          {% endif %}
 
-.btn-action{
-border-radius:50px;
-font-weight:500;
-padding:10px;
-}
+          <!-- COMPLETED -->
+          {% if order.status == 'completed' %}
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;text-align:center;">
+            <i class="bi bi-check-circle-fill" style="font-size:32px;color:#16a34a;display:block;margin-bottom:8px;"></i>
+            <div style="font-weight:700;color:#15803d;font-size:16px;">Order Complete</div>
+            <div style="font-size:13px;color:#16a34a;margin-top:4px;">Funds released {{ order.completed_at|date:"M d, Y" }}</div>
+          </div>
+          <a href="{% url 'product_detail' order.product.id %}" class="btn-mp btn-mp-light" style="width:100%;justify-content:center;font-size:14px;">
+            <i class="bi bi-star"></i> Leave a Review
+          </a>
+          {% endif %}
 
-.btn-warning{
-background:#ffa41c;
-border:none;
-}
+          <!-- REFUNDED -->
+          {% if order.status == 'refunded' %}
+          <div style="background:#ede9fe;border:1px solid #ddd6fe;border-radius:10px;padding:16px;text-align:center;">
+            <i class="bi bi-arrow-counterclockwise" style="font-size:32px;color:#7c3aed;display:block;margin-bottom:8px;"></i>
+            <div style="font-weight:700;color:#7c3aed;font-size:16px;">Refunded</div>
+            <div style="font-size:13px;color:#8b5cf6;margin-top:4px;">Funds returned to buyer</div>
+          </div>
+          {% endif %}
 
-.btn-warning:hover{
-background:#ff8f00;
-}
+          <!-- DISPUTE BUTTON -->
+          {% if order.status in 'paid,shipped' %}
+          <hr class="mp-divider" style="margin:4px 0;">
+          <a href="{% url 'raise_dispute' order.escrowtransaction.id %}" class="btn-mp btn-mp-danger" style="width:100%;justify-content:center;font-size:14px;padding:11px;">
+            <i class="bi bi-exclamation-triangle"></i> Raise Dispute
+          </a>
+          {% endif %}
 
-.btn-success{
-background:#198754;
-border:none;
-}
+          <!-- ADMIN REFUND -->
+          {% if request.user.is_staff and order.status not in 'completed,refunded,cancelled' %}
+          <hr class="mp-divider" style="margin:4px 0;">
+          <a href="{% url 'refund_buyer' order.escrowtransaction.id %}" class="btn-mp btn-mp-warning" style="width:100%;justify-content:center;font-size:14px;padding:11px;"
+             data-swal-confirm="Issue a full refund to the buyer?">
+            <i class="bi bi-arrow-counterclockwise"></i> Admin: Issue Refund
+          </a>
+          {% endif %}
 
-.btn-danger{
-background:#d9534f;
-border:none;
-}
+          {% if order.notes %}
+          <hr class="mp-divider" style="margin:4px 0;">
+          <div style="font-size:13px;color:#64748b;line-height:1.6;"><strong>Notes:</strong> {{ order.notes }}</div>
+          {% endif %}
 
-/* ALERTS */
+        </div>
+      </div>
+    </div>
 
-.alert-container{
-position:fixed;
-top:20px;
-right:20px;
-z-index:1050;
-min-width:260px;
-}
-
-/* MOBILE */
-
-@media(max-width:768px){
-.price-box{
-text-align:left;
-margin-top:15px;
-}
-}
-
-</style>
-</head>
-
-<body>
-
-<!-- NAVBAR -->
-
-<nav class="navbar navbar-expand-lg">
-<div class="container-fluid px-4">
-
-<a class="navbar-brand fw-bold" href="/">MarketPro</a>
-
-<form class="d-flex flex-grow-1 mx-4" method="GET" action="/">
-<div class="input-group">
-<input name="q" class="form-control" placeholder="Search products...">
-<button class="btn btn-warning">Search</button>
+  </div>
 </div>
-</form>
-
-<ul class="navbar-nav">
-<li class="nav-item"><a class="nav-link" href="#">Account</a></li>
-<li class="nav-item"><a class="nav-link" href="#">Orders</a></li>
-<li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-cart"></i></a></li>
-</ul>
-
-</div>
-</nav>
-
-<div class="container mt-4">
-
-<!-- ALERTS -->
-
-{% if messages %}
-<div class="alert-container">
-{% for message in messages %}
-<div class="alert alert-success alert-dismissible fade show">
-{{ message }}
-<button class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endfor %}
-</div>
-{% endif %}
-
-<a href="/" class="btn btn-link mb-3">
-<i class="bi bi-arrow-left"></i> Back to products
-</a>
-
-<div class="order-card">
-
-<!-- HEADER -->
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-
-<h4 class="fw-bold">Order Summary</h4>
-
-<span class="badge status-badge
-{% if order.status == 'escrow_created' %}bg-secondary
-{% elif order.status == 'paid' %}bg-success
-{% elif order.status == 'shipped' %}bg-warning text-dark
-{% elif order.status == 'completed' %}bg-primary
-{% else %}bg-dark{% endif %}
-">
-
-{{ order.status|title }}
-
-</span>
-
-</div>
-
-<!-- INFO -->
-
-<div class="row mb-4">
-
-<div class="col-md-6">
-
-<p><strong>Product:</strong> {{ order.product.name }}</p>
-<p><strong>Buyer:</strong> {{ order.buyer.username }}</p>
-<p><strong>Seller:</strong> {{ order.seller.username }}</p>
-
-</div>
-
-<div class="col-md-6 price-box">
-
-<p class="text-muted mb-1">Total Price</p>
-<div class="price">{{ order.total_price }} {{ order.currency }}</div>
-
-</div>
-
-</div>
-
-<hr>
-
-<!-- TIMELINE -->
-
-<div class="timeline mb-4">
-
-<div class="timeline-step done">
-<i class="bi bi-shield-check"></i> Escrow Created
-</div>
-
-<div class="timeline-step {% if order.status != 'escrow_created' %}done{% else %}pending{% endif %}">
-<i class="bi bi-wallet2"></i> Payment Funded
-</div>
-
-<div class="timeline-step {% if order.status == 'shipped' or order.status == 'completed' %}done{% else %}pending{% endif %}">
-<i class="bi bi-truck"></i> Shipped
-</div>
-
-<div class="timeline-step {% if order.status == 'completed' %}done{% else %}pending{% endif %}">
-<i class="bi bi-check-circle"></i> Delivery Confirmed
-</div>
-
-</div>
-
-<hr>
-
-<!-- ACTIONS -->
-
-<div class="row g-3">
-
-<!-- FUND -->
-
-{% if order.status == "escrow_created" %}
-
-<div class="col-md-6">
-
-<form method="post" action="{% url 'fund_escrow' order.escrowtransaction.id %}">
-{% csrf_token %}
-
-<button
-class="btn btn-success w-100 btn-action"
-onclick="this.disabled=true;this.form.submit();">
-
-<i class="bi bi-wallet2"></i>
-Fund Escrow
-
-</button>
-
-</form>
-
-</div>
-
-{% endif %}
-
-
-<!-- SELLER SHIPS -->
-
-{% if order.status == "paid" and request.user == order.seller %}
-
-<div class="col-md-6">
-
-<form method="post" action="{% url 'release_delivery' order.id %}">
-{% csrf_token %}
-
-<button class="btn btn-warning w-100 btn-action">
-
-<i class="bi bi-truck"></i>
-Release Delivery
-
-</button>
-
-</form>
-
-</div>
-
-{% endif %}
-
-
-<!-- BUYER CONFIRM -->
-
-{% if order.status == "shipped" and request.user == order.buyer %}
-
-<div class="col-md-6">
-
-<form method="post" action="{% url 'confirm_delivery' order.id %}">
-{% csrf_token %}
-
-<button class="btn btn-primary w-100 btn-action">
-
-<i class="bi bi-check-circle"></i>
-Confirm Delivery
-
-</button>
-
-</form>
-
-</div>
-
-{% endif %}
-
-
-<!-- MARK RECEIVED -->
-
-{% if order.status == "shipped" and request.user == order.buyer %}
-
-<div class="col-md-6">
-
-<form method="post" action="{% url 'mark_received' order.id %}">
-{% csrf_token %}
-
-<button class="btn btn-success w-100 btn-action">
-
-<i class="bi bi-box-seam"></i>
-Mark Received
-
-</button>
-
-</form>
-
-</div>
-
-{% endif %}
-
-
-<!-- DISPUTE -->
-
-<div class="col-md-6">
-
-<a href="{% url 'raise_dispute' order.escrowtransaction.id %}"
-class="btn btn-danger w-100 btn-action">
-
-<i class="bi bi-exclamation-triangle"></i>
-Raise Dispute
-
-</a>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-
-/* AUTO HIDE ALERTS */
-
-setTimeout(function(){
-
-document.querySelectorAll(".alert").forEach(function(alert){
-alert.remove()
-})
-
-},4000)
-
-
-/* AUTO REFRESH STATUS */
-
-setInterval(function(){
-
-fetch(window.location.href)
-.then(response => response.text())
-.then(html => {
-
-let parser = new DOMParser()
-let doc = parser.parseFromString(html,"text/html")
-
-let newStatus = doc.querySelector(".status-badge").innerHTML
-
-document.querySelector(".status-badge").innerHTML = newStatus
-
-})
-
-},5000)
-
-</script>
-
-</body>
-</html>
+{% endblock %}

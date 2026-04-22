@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Account — MarketPro</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #0a0f1e;
+  --ink2:   #111827;
+  --white:  #ffffff;
+  --blue:   #1a56db;
+  --sky:    #38bdf8;
+  --indigo: #818cf8;
+  --slate:  #64748b;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--ink); color: var(--white); overflow-x: hidden; min-height: 100vh; }
+
+.page {
+  position: relative; min-height: 100vh;
+  display: grid; grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+
+/* ── PARTICLES ── */
+#particles-reg { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+/* ── MESH ── */
+.mesh {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 50% at 25% 55%, rgba(26,86,219,.20) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 35% at 75% 15%, rgba(14,165,233,.13) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 40% at 60% 90%, rgba(129,140,248,.10) 0%, transparent 55%);
+}
+
+/* ── SPHERES ── */
+.sphere { position: absolute; border-radius: 50%; pointer-events: none; z-index: 2; }
+.s1 {
+  width: 280px; height: 280px; top: -90px; left: -80px;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.07), rgba(26,86,219,.20) 60%, transparent 100%);
+  border: 1px solid rgba(255,255,255,.06); animation: bob1 10s ease-in-out infinite;
+}
+.s2 {
+  width: 100px; height: 100px; bottom: 15%; left: 8%;
+  background: radial-gradient(circle at 40% 35%, rgba(255,255,255,.16), rgba(56,189,248,.18) 60%, transparent 100%);
+  border: 1px solid rgba(56,189,248,.16); animation: bob2 6.5s ease-in-out infinite 1.2s;
+}
+.s3 {
+  width: 65px; height: 65px; top: 35%; left: 46%;
+  background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.22), rgba(129,140,248,.18) 60%);
+  border: 1px solid rgba(255,255,255,.10); animation: bob1 5s ease-in-out infinite reverse;
+}
+.s4 {
+  width: 220px; height: 220px; bottom: -70px; right: 4%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.05), rgba(26,86,219,.14) 60%, transparent 100%);
+  border: 1px solid rgba(255,255,255,.05); animation: bob3 12s ease-in-out infinite;
+}
+.s5 {
+  width: 50px; height: 50px; top: 12%; right: 9%;
+  background: radial-gradient(circle at 40% 40%, rgba(56,189,248,.28), rgba(26,86,219,.18) 70%);
+  border: 1px solid rgba(56,189,248,.20); animation: bob2 4.8s ease-in-out infinite .6s;
+}
+.s6 {
+  width: 36px; height: 36px; top: 65%; left: 40%;
+  background: radial-gradient(circle at 40% 40%, rgba(129,140,248,.28), rgba(26,86,219,.15) 70%);
+  border: 1px solid rgba(129,140,248,.18); animation: bob1 3.8s ease-in-out infinite 1.8s;
+}
+
+/* ── GEO ── */
+.geo { position: absolute; pointer-events: none; z-index: 2; }
+.g-tri {
+  width: 0; height: 0;
+  border-left: 18px solid transparent; border-right: 18px solid transparent;
+  border-bottom: 30px solid rgba(56,189,248,.16);
+  top: 58%; left: 44%; animation: bob2 7.5s ease-in-out infinite;
+}
+.g-ring {
+  width: 50px; height: 50px; border-radius: 50%;
+  border: 2px solid rgba(56,189,248,.18);
+  bottom: 25%; left: 18%; animation: bob3 9s ease-in-out infinite 1s;
+}
+.g-sq {
+  width: 26px; height: 26px; border: 2px solid rgba(255,255,255,.12);
+  transform: rotate(45deg); top: 20%; left: 28%;
+  animation: bob1 6.5s ease-in-out infinite 2.2s;
+}
+.g-hex {
+  width: 38px; height: 38px;
+  background: rgba(129,140,248,.10);
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  top: 8%; right: 45%; animation: bob2 9.5s ease-in-out infinite;
+}
+.g-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(56,189,248,.45);
+  top: 48%; left: 7%; animation: bob1 3.8s ease-in-out infinite;
+}
+.g-diamond {
+  width: 22px; height: 22px;
+  background: rgba(56,189,248,.08); border: 1.5px solid rgba(56,189,248,.22);
+  transform: rotate(45deg); top: 78%; left: 35%;
+  animation: bob2 5.5s ease-in-out infinite 1.5s;
+}
+
+@keyframes bob1 { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(4deg)} }
+@keyframes bob2 { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-13px) rotate(-5deg)} }
+@keyframes bob3 { 0%,100%{transform:translateY(0)} 33%{transform:translateY(-16px)} 66%{transform:translateY(-7px)} }
+
+/* ── LEFT PANEL ── */
+.left-panel {
+  position: relative; z-index: 3;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 40px 52px; overflow: hidden;
+}
+.brand-logo {
+  font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; color: #fff;
+  margin-bottom: 40px; text-decoration: none; display: inline-block;
+  position: relative; z-index: 4;
+}
+.brand-logo span { color: var(--sky); }
+
+.left-copy { position: relative; z-index: 4; }
+.left-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px; padding: 5px 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: #93c5fd; margin-bottom: 18px;
+}
+.left-headline {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(28px, 3vw, 46px); font-weight: 800;
+  line-height: 1.05; letter-spacing: -1.5px; color: #fff; margin-bottom: 12px;
+}
+.left-headline .grad {
+  background: linear-gradient(120deg, #38bdf8 0%, #a5b4fc 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.left-sub { font-size: 14px; color: #94a3b8; line-height: 1.7; max-width: 320px; margin-bottom: 28px; }
+
+.feat-list { display: flex; flex-direction: column; gap: 11px; }
+.feat-item { display: flex; align-items: center; gap: 11px; font-size: 13px; color: #bae6fd; font-weight: 500; }
+.feat-icon {
+  width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px;
+  background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.11);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--sky);
+}
+
+/* Blockchain SVG */
+.bc-svg {
+  position: absolute; right: -20px; bottom: 32px;
+  width: 52%; opacity: .65; z-index: 3; pointer-events: none;
+}
+
+/* ── RIGHT PANEL ── */
+.right-panel {
+  position: relative; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px 28px; overflow-y: auto;
+}
+
+.form-card {
+  width: 100%; max-width: 460px;
+  background: rgba(255,255,255,.05);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 24px;
+  padding: 38px 36px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.07);
+  position: relative;
+}
+.form-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56,189,248,.38), transparent);
+  border-radius: 24px 24px 0 0;
+}
+
+.form-title {
+  font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #fff;
+  letter-spacing: -.5px; margin-bottom: 4px;
+}
+.form-sub { font-size: 13px; color: var(--slate); margin-bottom: 24px; }
+
+/* ── ROLE CARDS ── */
+.role-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 20px; }
+.role-card {
+  position: relative; border: 1.5px solid rgba(255,255,255,.10); border-radius: 14px;
+  padding: 14px 10px; text-align: center; cursor: pointer; transition: all .2s;
+  background: rgba(255,255,255,.04);
+}
+.role-card:hover { border-color: rgba(56,189,248,.40); background: rgba(56,189,248,.06); }
+.role-card.selected {
+  border-color: var(--sky); background: rgba(56,189,248,.12);
+  box-shadow: 0 0 0 1px rgba(56,189,248,.20), inset 0 1px 0 rgba(56,189,248,.10);
+}
+.role-card input[type="radio"] { display: none; }
+.role-card .r-icon { font-size: 22px; margin-bottom: 6px; line-height: 1; }
+.role-card .r-label { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #e2e8f0; }
+.role-card .r-desc { font-size: 10px; color: var(--slate); margin-top: 2px; }
+.role-card.selected .r-label { color: var(--sky); }
+
+/* Tick mark on selected */
+.role-card.selected::after {
+  content: '✓'; position: absolute; top: 6px; right: 9px;
+  font-size: 10px; color: var(--sky); font-weight: 700;
+}
+
+/* ── FIELDS ── */
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-wrap { position: relative; margin-bottom: 16px; }
+.field-label {
+  display: block; font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #94a3b8; margin-bottom: 7px;
+}
+.field-input {
+  width: 100%; font-family: 'DM Sans', sans-serif; font-size: 14px;
+  padding: 12px 14px 12px 42px;
+  background: rgba(255,255,255,.07); border: 1.5px solid rgba(255,255,255,.11);
+  border-radius: 11px; outline: none; color: #fff;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.field-input::placeholder { color: #475569; }
+.field-input:focus {
+  border-color: var(--sky); background: rgba(56,189,248,.06);
+  box-shadow: 0 0 0 3px rgba(56,189,248,.14);
+}
+.field-icon {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  font-size: 15px; color: #475569; pointer-events: none; transition: color .2s;
+}
+.field-wrap:focus-within .field-icon { color: var(--sky); }
+.pass-toggle {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  cursor: pointer; color: #475569; font-size: 14px; background: none; border: none;
+  padding: 4px; transition: color .2s;
+}
+.pass-toggle:hover { color: var(--sky); }
+
+/* Strength indicator */
+.strength-bar { display: flex; gap: 4px; margin-top: 6px; }
+.strength-seg {
+  height: 3px; flex: 1; border-radius: 99px;
+  background: rgba(255,255,255,.10); transition: background .3s;
+}
+.strength-seg.weak   { background: #ef4444; }
+.strength-seg.medium { background: #f59e0b; }
+.strength-seg.strong { background: #22c55e; }
+
+.btn-submit {
+  width: 100%; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+  padding: 14px; border-radius: 12px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--blue) 0%, #0ea5e9 100%);
+  color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all .2s; letter-spacing: .3px;
+  box-shadow: 0 8px 24px rgba(26,86,219,.35);
+  margin-top: 4px;
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(26,86,219,.50); }
+
+.alert-error {
+  background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.28);
+  color: #fca5a5; border-radius: 12px; padding: 11px 15px;
+  font-size: 13px; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.form-footer { text-align: center; font-size: 14px; color: var(--slate); margin-top: 20px; }
+.form-footer a { color: var(--sky); font-weight: 600; text-decoration: none; }
+.terms-note { text-align: center; font-size: 11px; color: #334155; margin-top: 10px; line-height: 1.5; }
+.terms-note a { color: #38bdf8; text-decoration: none; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .page { grid-template-columns: 1fr; }
+  .left-panel { display: none; }
+  .right-panel { padding: 28px 16px; }
+  .form-card { padding: 28px 20px; }
+  .field-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div id="particles-reg"></div>
+  <div class="mesh"></div>
+
+  <!-- Spheres -->
+  <div class="sphere s1"></div>
+  <div class="sphere s2"></div>
+  <div class="sphere s3"></div>
+  <div class="sphere s4"></div>
+  <div class="sphere s5"></div>
+  <div class="sphere s6"></div>
+
+  <!-- Geo -->
+  <div class="geo g-tri"></div>
+  <div class="geo g-ring"></div>
+  <div class="geo g-sq"></div>
+  <div class="geo g-hex"></div>
+  <div class="geo g-dot"></div>
+  <div class="geo g-diamond"></div>
+
+  <!-- ── LEFT PANEL ── -->
+  <div class="left-panel">
+    <a href="{% url 'home' %}" class="brand-logo">Market<span>Pro</span></a>
+    <div class="left-copy">
+      <div class="left-eyebrow"><i class="bi bi-rocket-takeoff-fill"></i> Join the Future</div>
+      <h1 class="left-headline">Commerce<br><span class="grad">Reimagined</span></h1>
+      <p class="left-sub">Create your free account and start buying or selling with blockchain escrow protection today.</p>
+      <div class="feat-list">
+        <div class="feat-item"><div class="feat-icon"><i class="bi bi-shield-check"></i></div> Every transaction escrow-protected</div>
+        <div class="feat-item"><div class="feat-icon"><i class="bi bi-lightning-charge"></i></div> Instant blockchain settlement</div>
+        <div class="feat-item"><div class="feat-icon"><i class="bi bi-shop-window"></i></div> Open your store in minutes</div>
+        <div class="feat-item"><div class="feat-icon"><i class="bi bi-hand-thumbs-up"></i></div> Zero platform fraud — ever</div>
+      </div>
+    </div>
+
+    <!-- Blockchain SVG bottom right of left panel -->
+    <svg class="bc-svg" viewBox="0 0 360 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="rgba(56,189,248,0.18)" stroke-width="1">
+        <line x1="60" y1="60"  x2="180" y2="120"/>
+        <line x1="180" y1="120" x2="300" y2="60"/>
+        <line x1="180" y1="120" x2="200" y2="220"/>
+        <line x1="200" y1="220" x2="300" y2="60"/>
+        <line x1="200" y1="220" x2="80" y2="240"/>
+        <line x1="80"  y1="240" x2="60" y2="60"/>
+        <line x1="80"  y1="240" x2="180" y2="290"/>
+        <line x1="180" y1="290" x2="200" y2="220"/>
+      </g>
+      <g>
+        <line x1="180" y1="120" x2="200" y2="220" stroke="rgba(56,189,248,.55)" stroke-width="1.5" stroke-dasharray="7 5">
+          <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.6s" repeatCount="indefinite"/>
+        </line>
+        <line x1="80" y1="240" x2="180" y2="290" stroke="rgba(129,140,248,.45)" stroke-width="1" stroke-dasharray="6 7">
+          <animate attributeName="stroke-dashoffset" from="0" to="-26" dur="2.4s" repeatCount="indefinite"/>
+        </line>
+      </g>
+      <!-- Nodes -->
+      <circle cx="180" cy="120" r="16" fill="rgba(26,86,219,.22)" stroke="rgba(56,189,248,.50)" stroke-width="1.5">
+        <animate attributeName="r" values="16;20;16" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <polygon points="180,112 187,116 187,124 180,128 173,124 173,116" fill="rgba(26,86,219,.55)" stroke="rgba(56,189,248,.85)" stroke-width="1"/>
+      <text x="180" y="123" text-anchor="middle" fill="#bae6fd" font-size="5.5" font-family="monospace">0x4C</text>
+
+      <circle cx="200" cy="220" r="18" fill="rgba(26,86,219,.25)" stroke="rgba(129,140,248,.55)" stroke-width="1.5">
+        <animate attributeName="r" values="18;22;18" dur="2.6s" repeatCount="indefinite" begin=".7s"/>
+      </circle>
+      <polygon points="200,210 208,215 208,225 200,230 192,225 192,215" fill="rgba(26,86,219,.55)" stroke="rgba(129,140,248,.80)" stroke-width="1.5"/>
+      <text x="200" y="223" text-anchor="middle" fill="#e0e7ff" font-size="5.5" font-family="monospace">BLK</text>
+
+      <circle cx="60" cy="60" r="12" fill="rgba(14,165,233,.14)" stroke="rgba(56,189,248,.36)" stroke-width="1">
+        <animate attributeName="r" values="12;15;12" dur="4s" repeatCount="indefinite"/>
+      </circle>
+      <polygon points="60,54 65,57 65,63 60,66 55,63 55,57" fill="rgba(14,165,233,.38)" stroke="rgba(56,189,248,.62)" stroke-width="1"/>
+
+      <circle cx="300" cy="60" r="11" fill="rgba(14,165,233,.12)" stroke="rgba(56,189,248,.30)" stroke-width="1">
+        <animate attributeName="r" values="11;14;11" dur="5s" repeatCount="indefinite" begin="1.4s"/>
+      </circle>
+      <polygon points="300,54 305,57 305,63 300,66 295,63 295,57" fill="rgba(14,165,233,.32)" stroke="rgba(56,189,248,.55)" stroke-width="1"/>
+
+      <circle cx="80" cy="240" r="14" fill="rgba(26,86,219,.18)" stroke="rgba(56,189,248,.36)" stroke-width="1">
+        <animate attributeName="r" values="14;17;14" dur="3.8s" repeatCount="indefinite" begin=".5s"/>
+      </circle>
+      <polygon points="80,233 86,237 86,243 80,247 74,243 74,237" fill="rgba(26,86,219,.42)" stroke="rgba(56,189,248,.65)" stroke-width="1"/>
+
+      <circle cx="180" cy="290" r="13" fill="rgba(14,165,233,.12)" stroke="rgba(56,189,248,.28)" stroke-width="1">
+        <animate attributeName="r" values="13;16;13" dur="4.5s" repeatCount="indefinite" begin="2.2s"/>
+      </circle>
+      <polygon points="180,284 185,287 185,293 180,296 175,293 175,287" fill="rgba(14,165,233,.32)" stroke="rgba(56,189,248,.55)" stroke-width="1"/>
+
+      <text x="193" y="108" fill="rgba(148,163,184,.45)" font-size="6" font-family="monospace">hash: 0xb2d</text>
+      <text x="205" y="208" fill="rgba(148,163,184,.40)" font-size="5.5" font-family="monospace">nonce:7142</text>
+
+      <circle r="2.5" fill="#38bdf8" opacity=".85">
+        <animateMotion dur="3.2s" repeatCount="indefinite">
+          <mpath href="#rpath"/>
+        </animateMotion>
+      </circle>
+      <defs><path id="rpath" d="M180,120 L200,220 L80,240 L60,60 L180,120"/></defs>
+    </svg>
+  </div>
+
+  <!-- ── RIGHT PANEL (FORM) ── -->
+  <div class="right-panel">
+    <div class="form-card">
+      <div class="form-title">Create Account</div>
+      <div class="form-sub">Join MarketPro — it's completely free</div>
+
+      {% if error %}
+      <div class="alert-error"><i class="bi bi-exclamation-circle-fill"></i> {{ error }}</div>
+      {% endif %}
+
+      <form method="POST" id="regForm">
+        {% csrf_token %}
+
+        <!-- Role selection -->
+        <div class="field-wrap" style="margin-bottom:20px;">
+          <label class="field-label">I want to</label>
+          <div class="role-grid">
+            <label class="role-card selected" id="card-buyer">
+              <input type="radio" name="role" value="buyer" checked onchange="selectRole('buyer')">
+              <div class="r-icon">🛒</div>
+              <div class="r-label">Buy</div>
+              <div class="r-desc">Shop products</div>
+            </label>
+            <label class="role-card" id="card-seller">
+              <input type="radio" name="role" value="seller" onchange="selectRole('seller')">
+              <div class="r-icon">🏪</div>
+              <div class="r-label">Sell</div>
+              <div class="r-desc">Open a store</div>
+            </label>
+            <label class="role-card" id="card-both">
+              <input type="radio" name="role" value="both" onchange="selectRole('both')">
+              <div class="r-icon">🔄</div>
+              <div class="r-label">Both</div>
+              <div class="r-desc">Buy &amp; Sell</div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Username + Email -->
+        <div class="field-row">
+          <div class="field-wrap" style="margin-bottom:0;">
+            <label class="field-label">Username</label>
+            <i class="bi bi-person field-icon"></i>
+            <input type="text" name="username" class="field-input" placeholder="username" required autofocus>
+          </div>
+          <div class="field-wrap" style="margin-bottom:0;">
+            <label class="field-label">Email</label>
+            <i class="bi bi-envelope field-icon"></i>
+            <input type="email" name="email" class="field-input" placeholder="you@email.com" required>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;"></div>
+
+        <!-- Password -->
+        <div class="field-wrap">
+          <label class="field-label">Password</label>
+          <i class="bi bi-lock field-icon"></i>
+          <input type="password" name="password" id="p1" class="field-input"
+                 placeholder="Min. 8 characters" required style="padding-right:42px;"
+                 oninput="checkStrength(this.value)">
+          <button type="button" class="pass-toggle" onclick="togglePass('p1','ic1')">
+            <i class="bi bi-eye" id="ic1"></i>
+          </button>
+          <!-- Strength bar -->
+          <div class="strength-bar" id="strengthBar">
+            <div class="strength-seg" id="seg1"></div>
+            <div class="strength-seg" id="seg2"></div>
+            <div class="strength-seg" id="seg3"></div>
+            <div class="strength-seg" id="seg4"></div>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="field-wrap">
+          <label class="field-label">Confirm Password</label>
+          <i class="bi bi-lock-fill field-icon"></i>
+          <input type="password" name="password2" id="p2" class="field-input"
+                 placeholder="Repeat password" required style="padding-right:42px;">
+          <button type="button" class="pass-toggle" onclick="togglePass('p2','ic2')">
+            <i class="bi bi-eye" id="ic2"></i>
+          </button>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-person-plus"></i> Create Account
+        </button>
+      </form>
+
+      <div class="form-footer">
+        Already have an account? <a href="{% url 'login' %}">Sign In</a>
+      </div>
+      <div class="terms-note">
+        By creating an account you agree to our
+        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Particles
+particlesJS('particles-reg', {
+  particles: {
+    number: { value: 70, density: { enable: true, value_area: 900 } },
+    color: { value: ['#ffffff', '#000000', '#38bdf8', '#1a56db', '#818cf8'] },
+    shape: { type: ['circle', 'triangle', 'polygon'], polygon: { nb_sides: 6 } },
+    opacity: { value: 0.28, random: true, anim: { enable: true, speed: 0.7, opacity_min: 0.04, sync: false } },
+    size:    { value: 2.5, random: true, anim: { enable: true, speed: 1.5, size_min: 0.4, sync: false } },
+    line_linked: { enable: true, distance: 120, color: '#38bdf8', opacity: 0.09, width: 1 },
+    move: { enable: true, speed: 0.65, direction: 'none', random: true, straight: false, out_mode: 'bounce' }
+  },
+  interactivity: {
+    detect_on: 'canvas',
+    events: { onhover: { enable: true, mode: 'grab' }, onclick: { enable: true, mode: 'push' }, resize: true },
+    modes: { grab: { distance: 120, line_linked: { opacity: 0.32 } }, push: { particles_nb: 2 } }
+  },
+  retina_detect: true
+});
+
+// Role select
+function selectRole(role) {
+  ['buyer','seller','both'].forEach(r => {
+    document.getElementById('card-' + r).classList.toggle('selected', r === role);
+  });
+}
+
+// Password toggle
+function togglePass(id, iconId) {
+  const f = document.getElementById(id);
+  const i = document.getElementById(iconId);
+  f.type = f.type === 'password' ? 'text' : 'password';
+  i.className = f.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+
+// Strength meter
+function checkStrength(val) {
+  const segs = [document.getElementById('seg1'),document.getElementById('seg2'),document.getElementById('seg3'),document.getElementById('seg4')];
+  segs.forEach(s => { s.className = 'strength-seg'; });
+  if (!val) return;
+  let score = 0;
+  if (val.length >= 8) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const cls = score <= 1 ? 'weak' : score <= 2 ? 'medium' : 'strong';
+  for (let i = 0; i < score; i++) segs[i].classList.add(cls);
+}
+
+// Submit validation
+document.getElementById('regForm').addEventListener('submit', function(e) {
+  const p1 = document.getElementById('p1').value;
+  const p2 = document.getElementById('p2').value;
+  if (p1 !== p2) {
+    e.preventDefault();
+    Swal.fire({
+      icon: 'error', title: "Passwords don't match",
+      toast: true, position: 'top-end', timer: 3000, showConfirmButton: false,
+      background: '#1e293b', color: '#f1f5f9',
+      iconColor: '#ef4444'
+    });
+  }
+});
+</script>
+</body>
+</html>

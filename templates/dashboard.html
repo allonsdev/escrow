@@ -1,260 +1,168 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Analytics Dashboard</title>
+{% extends "base.html" %}
+{% block title %}Analytics — MarketPro{% endblock %}
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+{% block extra_head %}
 <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+{% block content %}
+<div style="max-width:1400px;margin:0 auto;padding:24px 1.5rem 4rem;">
+
+  <div class="page-header">
+    <div><h1><i class="bi bi-bar-chart-line" style="color:#1a56db;"></i> Analytics Dashboard</h1><p>Platform-wide metrics and activity logs</p></div>
+    <div style="display:flex;gap:10px;">
+      <a href="{% url 'kpi' %}" class="btn-mp btn-mp-outline" style="font-size:14px;"><i class="bi bi-graph-up-arrow"></i> KPI View</a>
+      <a href="{% url 'admin_dashboard' %}" class="btn-mp btn-mp-primary" style="font-size:14px;"><i class="bi bi-shield-fill"></i> Admin Panel</a>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+    <div class="kpi-card"><div class="kpi-icon kpi-icon-blue"><i class="bi bi-people"></i></div><div><div class="kpi-value">{{ total_users }}</div><div class="kpi-label">Total Users</div><div style="font-size:12px;color:#1a56db;margin-top:3px;">{{ verified_users }} verified · {{ flagged_users }} flagged</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon kpi-icon-sky"><i class="bi bi-bag-check"></i></div><div><div class="kpi-value">{{ total_orders }}</div><div class="kpi-label">Total Orders</div><div style="font-size:12px;color:#0369a1;margin-top:3px;">{{ completed_orders }} completed</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon kpi-icon-green"><i class="bi bi-shield-check"></i></div><div><div class="kpi-value">{{ total_escrows }}</div><div class="kpi-label">Total Escrows</div><div style="font-size:12px;color:#16a34a;margin-top:3px;">{{ funded_escrows }} funded</div></div></div>
+    <div class="kpi-card"><div class="kpi-icon kpi-icon-yellow"><i class="bi bi-eye"></i></div><div><div class="kpi-value">{{ total_visits }}</div><div class="kpi-label">Site Visits</div><div style="font-size:12px;color:#a16207;margin-top:3px;">{{ unique_visitors }} unique</div></div></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+    <div class="mp-card">
+      <div class="mp-card-header"><h3 style="font-size:16px;font-weight:700;margin:0;"><i class="bi bi-graph-up text-blue"></i> 7-Day Orders vs Disputes</h3></div>
+      <div class="mp-card-body"><canvas id="trendChart" height="140"></canvas></div>
+    </div>
+    <div class="mp-card">
+      <div class="mp-card-header"><h3 style="font-size:16px;font-weight:700;margin:0;"><i class="bi bi-pie-chart text-blue"></i> Escrow Status</h3></div>
+      <div class="mp-card-body" style="display:flex;align-items:center;justify-content:center;"><canvas id="escrowChart" style="max-height:220px;"></canvas></div>
+    </div>
+  </div>
+
+  <!-- RECENT ESCROWS -->
+  <div class="mp-card" style="margin-bottom:24px;">
+    <div class="mp-card-header"><h3 style="font-size:16px;font-weight:700;margin:0;"><i class="bi bi-shield-half text-blue"></i> Recent Escrow Transactions</h3></div>
+    <div class="mp-card-body" style="padding:0;">
+      <table class="mp-table" id="escrowTable">
+        <thead><tr><th>ID</th><th>Buyer</th><th>Seller</th><th>Amount</th><th>Status</th><th>Fraud Score</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for e in recent_escrows %}
+          <tr>
+            <td style="font-family:monospace;font-size:13px;color:#64748b;">{{ e.id|stringformat:"s"|slice:":8" }}</td>
+            <td style="font-weight:600;">{{ e.buyer.username }}</td>
+            <td>{{ e.seller.username }}</td>
+            <td style="font-weight:700;color:#1a56db;">{{ e.amount }} {{ e.currency }}</td>
+            <td><span class="mp-badge {% if e.status == 'released' %}badge-green{% elif e.status == 'disputed' %}badge-red{% elif e.status == 'paid' %}badge-sky{% elif e.status == 'refunded' %}badge-purple{% else %}badge-gray{% endif %}" style="font-size:11px;">{{ e.status|title }}</span></td>
+            <td style="font-size:14px;color:{% if e.fraud_risk_score > 50 %}#ef4444{% else %}#16a34a{% endif %};">{{ e.fraud_risk_score }}</td>
+            <td style="font-size:13px;color:#94a3b8;">{{ e.created_at|date:"M d, Y" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="empty-state" style="padding:32px;">No escrow transactions</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAYMENTS + LOGS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+    <div class="mp-card">
+      <div class="mp-card-header"><h3 style="font-size:16px;font-weight:700;margin:0;"><i class="bi bi-credit-card text-blue"></i> Recent Payments</h3></div>
+      <div class="mp-card-body" style="padding:0;">
+        <table class="mp-table" id="paymentTable">
+          <thead><tr><th>Payer</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for p in recent_payments %}
+            <tr>
+              <td style="font-weight:600;">{{ p.payer.username }}</td>
+              <td style="font-weight:700;color:#1a56db;">{{ p.amount }} {{ p.currency }}</td>
+              <td style="font-size:13px;color:#64748b;">{{ p.payment_method }}</td>
+              <td><span class="mp-badge {% if p.status == 'funded' %}badge-green{% else %}badge-gray{% endif %}" style="font-size:11px;">{{ p.status|title }}</span></td>
+              <td style="font-size:13px;color:#94a3b8;">{{ p.created_at|date:"M d" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="empty-state" style="padding:32px;">No payments</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="mp-card">
+      <div class="mp-card-header"><h3 style="font-size:16px;font-weight:700;margin:0;"><i class="bi bi-journal-text text-blue"></i> System Logs</h3></div>
+      <div>
+        {% for l in recent_logs %}
+        <div style="padding:12px 20px;{% if not forloop.last %}border-bottom:1px solid #f0f7ff;{% endif %}">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:28px;height:28px;background:#f0f7ff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#1a56db;flex-shrink:0;"><i class="bi bi-activity"></i></div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;font-weight:600;color:#1e293b;"><strong>{{ l.user.username|default:"System" }}</strong> — {{ l.action_type }}</div>
+              <div style="font-size:12px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ l.description }}</div>
+            </div>
+            <div style="font-size:11px;color:#94a3b8;flex-shrink:0;">{{ l.created_at|date:"M d H:i" }}</div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-state" style="padding:32px;">No logs</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- SITE VISITS -->
+  <div class="mp-card">
+    <div class="mp-card-header"><h3 style="font-size:16px;font-weight:700;margin:0;"><i class="bi bi-globe text-blue"></i> Recent Site Visits</h3></div>
+    <div class="mp-card-body" style="padding:0;">
+      <table class="mp-table" id="visitTable">
+        <thead><tr><th>User</th><th>Page</th><th>Country</th><th>Device</th><th>Browser</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for v in recent_visits %}
+          <tr>
+            <td style="font-weight:600;">{{ v.user.username|default:"Anonymous" }}</td>
+            <td style="font-size:13px;color:#64748b;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ v.page_url }}</td>
+            <td>{{ v.country|default:"—" }}</td>
+            <td style="font-size:13px;color:#64748b;">{{ v.device_type|default:"—" }}</td>
+            <td style="font-size:13px;color:#64748b;">{{ v.browser|default:"—" }}</td>
+            <td style="font-size:13px;color:#94a3b8;">{{ v.visited_at|date:"M d, H:i" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="empty-state" style="padding:32px;">No visits logged</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
-<style>
-body { background:#f8f9fa; }
-.dashboard-card {
-    border:none;
-    border-radius:18px;
-    box-shadow:0 8px 25px rgba(0,0,0,0.06);
-}
-.kpi-card h2 {
-    font-weight:700;
-}
-.chart-container {
-    padding:20px;
-}
-</style>
-</head>
-<body>
-
-<nav class="navbar navbar-dark bg-dark py-3 shadow-sm">
-  <div class="container-fluid">
-    <span class="navbar-brand fw-bold">📊 Analytics Dashboard</span>
-  </div>
-</nav>
-
-<div class="container py-5">
-
-<!-- KPI SECTION -->
-<div class="row g-4 mb-5">
-
-<div class="col-md-3">
-<div class="card dashboard-card p-4 text-center">
-<h6>Total Users</h6>
-<h2>{{ total_users }}</h2>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="card dashboard-card p-4 text-center">
-<h6>Total Orders</h6>
-<h2>{{ total_orders }}</h2>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="card dashboard-card p-4 text-center">
-<h6>Total Escrows</h6>
-<h2>{{ total_escrows }}</h2>
-</div>
-</div>
-
-<div class="col-md-3">
-<div class="card dashboard-card p-4 text-center">
-<h6>Total Visits</h6>
-<h2>{{ total_visits }}</h2>
-</div>
-</div>
-
-</div>
-
-<!-- CHARTS -->
-<div class="row g-4 mb-5">
-
-<div class="col-md-4">
-<div class="card dashboard-card chart-container">
-<h6 class="fw-bold mb-3">Orders Status</h6>
-<canvas id="orderChart"></canvas>
-</div>
-</div>
-
-<div class="col-md-4">
-<div class="card dashboard-card chart-container">
-<h6 class="fw-bold mb-3">Disputes</h6>
-<canvas id="disputeChart"></canvas>
-</div>
-</div>
-
-<div class="col-md-4">
-<div class="card dashboard-card chart-container">
-<h6 class="fw-bold mb-3">Fraud Risk</h6>
-<canvas id="fraudChart"></canvas>
-</div>
-</div>
-
-</div>
-
-<div class="row mb-5">
-<div class="col-12">
-<div class="card dashboard-card chart-container">
-<h6 class="fw-bold mb-3">7 Day Trend</h6>
-<canvas id="trendChart"></canvas>
-</div>
-</div>
-</div>
-
-<!-- ESCROW TABLE -->
-<div class="card dashboard-card p-4 mb-5">
-<h5 class="fw-bold mb-3">Escrow Transactions</h5>
-<table id="escrowTable" class="table table-striped">
-<thead>
-<tr>
-<th>ID</th>
-<th>Buyer</th>
-<th>Seller</th>
-<th>Amount</th>
-<th>Status</th>
-<th>Fraud Score</th>
-<th>Date</th>
-</tr>
-</thead>
-<tbody>
-{% for e in recent_escrows %}
-<tr>
-<td>{{ e.id }}</td>
-<td>{{ e.buyer.username }}</td>
-<td>{{ e.seller.username }}</td>
-<td>{{ e.amount }} {{ e.currency }}</td>
-<td>{{ e.status }}</td>
-<td>{{ e.fraud_risk_score }}</td>
-<td>{{ e.created_at }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-
-<!-- PAYMENTS TABLE -->
-<div class="card dashboard-card p-4 mb-5">
-<h5 class="fw-bold mb-3">Payments</h5>
-<table id="paymentTable" class="table table-striped">
-<thead>
-<tr>
-<th>Transaction</th>
-<th>Payer</th>
-<th>Amount</th>
-<th>Status</th>
-<th>Confirmations</th>
-<th>Date</th>
-</tr>
-</thead>
-<tbody>
-{% for p in recent_payments %}
-<tr>
-<td>{{ p.transaction.id }}</td>
-<td>{{ p.payer.username }}</td>
-<td>{{ p.amount }} {{ p.currency }}</td>
-<td>{{ p.status }}</td>
-<td>{{ p.confirmations }}</td>
-<td>{{ p.created_at }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-
-<!-- LOGS TABLE -->
-<div class="card dashboard-card p-4 mb-5">
-<h5 class="fw-bold mb-3">System Logs</h5>
-<table id="logTable" class="table table-striped">
-<thead>
-<tr>
-<th>User</th>
-<th>Action</th>
-<th>Description</th>
-<th>Date</th>
-</tr>
-</thead>
-<tbody>
-{% for l in recent_logs %}
-<tr>
-<td>{{ l.user.username }}</td>
-<td>{{ l.action_type }}</td>
-<td>{{ l.description|truncatewords:10 }}</td>
-<td>{{ l.created_at }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-
-<!-- VISITS TABLE -->
-<div class="card dashboard-card p-4 mb-5">
-<h5 class="fw-bold mb-3">Recent Visits</h5>
-<table id="visitTable" class="table table-striped">
-<thead>
-<tr>
-<th>User</th>
-<th>Page</th>
-<th>Country</th>
-<th>Device</th>
-<th>Date</th>
-</tr>
-</thead>
-<tbody>
-{% for v in recent_visits %}
-<tr>
-<td>{{ v.user.username }}</td>
-<td>{{ v.page_url }}</td>
-<td>{{ v.country }}</td>
-<td>{{ v.device_type }}</td>
-<td>{{ v.visited_at }}</td>
-</tr>
-{% endfor %}
-</tbody>
-</table>
-</div>
-
-</div>
-
 <script>
-new Chart(document.getElementById('orderChart'), {
-type:'pie',
-data:{labels:['Completed','Pending'],
-datasets:[{data:[{{ completed_orders }},{{ pending_orders }}]}]}
-});
-
-new Chart(document.getElementById('disputeChart'), {
-type:'bar',
-data:{labels:['Open','Resolved'],
-datasets:[{data:[{{ open_disputes }},{{ resolved_disputes }}]}]}
-});
-
-new Chart(document.getElementById('fraudChart'), {
-type:'doughnut',
-data:{labels:['User','Escrow'],
-datasets:[{data:[{{ avg_fraud_user }},{{ avg_fraud_escrow }}]}]}
+$(document).ready(function(){
+  $('#escrowTable').DataTable({ pageLength:10, order:[[6,'desc']] });
+  $('#paymentTable').DataTable({ pageLength:10, order:[[4,'desc']] });
+  $('#visitTable').DataTable({ pageLength:10, order:[[5,'desc']] });
 });
 
 new Chart(document.getElementById('trendChart'), {
-type:'line',
-data:{
-labels:{{ trend_labels|safe }},
-datasets:[
-{label:'Orders',data:{{ order_trend|safe }}},
-{label:'Disputes',data:{{ dispute_trend|safe }}}
-]}
+  type:'line',
+  data:{
+    labels: {{ trend_labels|safe }},
+    datasets:[
+      { label:'Orders', data:{{ order_trend|safe }}, borderColor:'#1a56db', backgroundColor:'rgba(26,86,219,.1)', fill:true, tension:.4, pointRadius:4, pointBackgroundColor:'#1a56db' },
+      { label:'Disputes', data:{{ dispute_trend|safe }}, borderColor:'#ef4444', backgroundColor:'rgba(239,68,68,.08)', fill:true, tension:.4, pointRadius:4, pointBackgroundColor:'#ef4444' },
+    ]
+  },
+  options:{responsive:true,plugins:{legend:{labels:{font:{family:'Plus Jakarta Sans',size:13},boxWidth:12}}},scales:{x:{grid:{color:'#f0f7ff'},ticks:{font:{size:11}}},y:{grid:{color:'#f0f7ff'},ticks:{font:{size:11}}}}}
 });
 
-$(document).ready(function(){
-$('#escrowTable').DataTable();
-$('#paymentTable').DataTable();
-$('#logTable').DataTable();
-$('#visitTable').DataTable();
+new Chart(document.getElementById('escrowChart'), {
+  type:'doughnut',
+  data:{
+    labels:['Funded','Released','Disputed','Refunded','Created'],
+    datasets:[{data:[{{ funded_escrows }},{{ total_escrows|add:0 }},{{ disputed_escrows }},{{ refunded_escrows }},0],backgroundColor:['#0ea5e9','#22c55e','#ef4444','#8b5cf6','#94a3b8'],borderWidth:2,borderColor:'#fff'}]
+  },
+  options:{cutout:'60%',plugins:{legend:{position:'bottom',labels:{font:{family:'Plus Jakarta Sans',size:12},boxWidth:12,padding:12}}}}
 });
 </script>
-
-</body>
-</html>
+{% endblock %}

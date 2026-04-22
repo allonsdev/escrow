@@ -1,0 +1,504 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block title %}Seller Dashboard — MarketPro{% endblock %}
+
+{% block extra_head %}
+<link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:1400px;margin:0 auto;padding:24px 1.5rem 4rem;">
+
+  <div class="page-header">
+    <div>
+      <h1><i class="bi bi-shop-window" style="color:#1a56db;"></i> Seller Dashboard</h1>
+      <p>Manage your shop, products, inventory, and orders</p>
+    </div>
+    {% if shop %}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn-mp btn-mp-outline" onclick="showModal('editShopModal')"><i class="bi bi-pencil"></i> Edit Shop</button>
+      <button class="btn-mp btn-mp-primary" onclick="showModal('addProductModal')"><i class="bi bi-plus-circle"></i> Add Product</button>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if not shop %}
+  <!-- NO SHOP -->
+  <div style="display:flex;justify-content:center;padding:60px 0;">
+    <div class="mp-card" style="max-width:580px;width:100%;text-align:center;">
+      <div class="mp-card-body" style="padding:56px 48px;">
+        <div style="width:80px;height:80px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;color:#1a56db;margin:0 auto 24px;">
+          <i class="bi bi-shop"></i>
+        </div>
+        <h2 style="font-size:26px;font-weight:800;margin-bottom:12px;">Open Your Shop</h2>
+        <p style="color:#64748b;margin-bottom:32px;font-size:16px;line-height:1.6;">Register your storefront and start selling. All transactions are protected by blockchain escrow — no chargebacks, no fraud.</p>
+        <div style="display:flex;flex-direction:column;gap:12px;text-align:left;margin-bottom:32px;">
+          {% for item in "Free to start;Blockchain escrow on all sales;Instant payout on delivery;Full inventory management"|split:";" %}
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#475569;">
+            <i class="bi bi-check-circle-fill" style="color:#22c55e;"></i> {{ item }}
+          </div>
+          {% endfor %}
+        </div>
+        <button class="btn-mp btn-mp-primary" style="font-size:16px;padding:14px 32px;width:100%;justify-content:center;" onclick="showModal('registerShopModal')">
+          <i class="bi bi-shop-window"></i> Register Your Shop — It's Free
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <!-- KPI CARDS -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+    <div class="kpi-card" style="background:linear-gradient(135deg,#1a56db,#0ea5e9);border:none;">
+      <div class="kpi-icon" style="background:rgba(255,255,255,.2);color:#fff;"><i class="bi bi-currency-exchange"></i></div>
+      <div><div class="kpi-value" style="color:#fff;">{{ total_revenue|floatformat:4 }}</div><div class="kpi-label" style="color:#bae6fd;">Revenue (ETH)</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon-green"><i class="bi bi-bag-check"></i></div>
+      <div><div class="kpi-value">{{ completed_count }}</div><div class="kpi-label">Completed Orders</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon-yellow"><i class="bi bi-hourglass-split"></i></div>
+      <div><div class="kpi-value">{{ pending_orders }}</div><div class="kpi-label">Pending Orders</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon kpi-icon-red"><i class="bi bi-exclamation-triangle"></i></div>
+      <div><div class="kpi-value">{{ dispute_count }}</div><div class="kpi-label">Disputes</div></div>
+    </div>
+  </div>
+
+  <!-- SHOP INFO -->
+  <div class="mp-card" style="margin-bottom:24px;">
+    <div class="mp-card-body">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div style="width:64px;height:64px;background:linear-gradient(135deg,#1a56db,#0ea5e9);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;flex-shrink:0;"><i class="bi bi-shop"></i></div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <h2 style="font-size:22px;font-weight:800;margin:0;">{{ shop.name }}</h2>
+            {% if shop.is_verified %}<span class="mp-badge badge-green"><i class="bi bi-patch-check-fill"></i> Verified</span>{% endif %}
+            {% if shop.is_active %}<span class="mp-badge badge-blue">Active</span>{% else %}<span class="mp-badge badge-red">Inactive</span>{% endif %}
+          </div>
+          <p style="color:#64748b;margin:6px 0 0;font-size:15px;">{{ shop.description|default:"No description yet." }}</p>
+          <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;font-size:14px;color:#94a3b8;">
+            {% if shop.city %}<span><i class="bi bi-geo-alt"></i> {{ shop.city }}{% if shop.country %}, {{ shop.country }}{% endif %}</span>{% endif %}
+            {% if shop.email %}<span><i class="bi bi-envelope"></i> {{ shop.email }}</span>{% endif %}
+            {% if shop.phone %}<span><i class="bi bi-telephone"></i> {{ shop.phone }}</span>{% endif %}
+            <span><i class="bi bi-calendar3"></i> Since {{ shop.created_at|date:"M Y" }}</span>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-size:32px;font-weight:800;color:#1a56db;">{{ shop.total_sales }}</div>
+          <div style="font-size:13px;color:#94a3b8;">Total Sales</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOW STOCK ALERT -->
+  {% if low_stock %}
+  <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b;font-size:20px;flex-shrink:0;"></i>
+    <div style="flex:1;">
+      <strong style="color:#92400e;">Low Stock Alert:</strong>
+      <span style="color:#b45309;font-size:15px;">
+        {{ low_stock.count }} product{{ low_stock.count|pluralize }} running low:
+        {% for p in low_stock %}<strong>{{ p.name }}</strong> ({{ p.quantity_available }}){% if not forloop.last %}, {% endif %}{% endfor %}
+      </span>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- TABS -->
+  <div style="display:flex;gap:4px;border-bottom:2px solid #dbeafe;margin-bottom:24px;overflow-x:auto;">
+    {% for tab in tabs %}
+    <button onclick="switchTab('{{ tab.id }}')" id="tab-{{ tab.id }}"
+            style="padding:12px 20px;border:none;background:none;font-family:inherit;font-size:15px;
+                   font-weight:{% if tab.active %}700{% else %}600{% endif %};
+                   color:{% if tab.active %}#1a56db{% else %}#64748b{% endif %};
+                   border-bottom:2px solid {% if tab.active %}#1a56db{% else %}transparent{% endif %};
+                   margin-bottom:-2px;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+      <i class="bi {{ tab.icon }}"></i> {{ tab.label }}
+    </button>
+    {% endfor %}
+  </div>
+
+  <!-- PRODUCTS TAB -->
+  <div id="pane-products">
+    <div class="mp-card">
+      <div class="mp-card-body" style="padding:0;">
+        <table class="mp-table" id="productTable">
+          <thead><tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Sales</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for product in page_obj %}
+            <tr>
+              <td>
+                <div style="font-weight:700;color:#1e293b;">{{ product.name }}</div>
+                {% if product.sku %}<div style="font-size:12px;color:#94a3b8;">SKU: {{ product.sku }}</div>{% endif %}
+              </td>
+              <td>{% if product.category %}<span class="mp-badge badge-sky" style="font-size:11px;">{{ product.category.name }}</span>{% else %}—{% endif %}</td>
+              <td style="font-weight:700;color:#1a56db;">{{ product.price }} {{ product.currency }}</td>
+              <td>
+                <div style="font-weight:700;color:{% if product.is_out_of_stock %}#ef4444{% elif product.is_low_stock %}#f59e0b{% else %}#16a34a{% endif %};">{{ product.quantity_available }}</div>
+                {% if product.is_low_stock and not product.is_out_of_stock %}<span class="mp-badge badge-yellow" style="font-size:10px;">Low</span>{% endif %}
+              </td>
+              <td>
+                {% if product.is_active %}<span class="mp-badge badge-green" style="font-size:11px;"><i class="bi bi-circle-fill" style="font-size:7px;"></i> Active</span>{% else %}<span class="mp-badge badge-red" style="font-size:11px;">Inactive</span>{% endif %}
+                {% if product.is_featured %}<span class="mp-badge badge-blue" style="font-size:10px;margin-top:3px;"><i class="bi bi-star-fill"></i> Featured</span>{% endif %}
+              </td>
+              <td style="font-weight:600;">{{ product.total_purchases }}</td>
+              <td>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                  <button class="btn-mp btn-mp-outline" style="padding:6px 10px;font-size:12px;" title="Edit"
+                          onclick="openEditProduct('{{ product.id }}','{{ product.name|escapejs }}','{{ product.price }}','{{ product.currency }}','{{ product.condition }}','{{ product.quantity_available }}','{{ product.low_stock_threshold }}','{{ product.is_active|yesno:"true,false" }}','{{ product.is_featured|yesno:"true,false" }}','{{ product.description|escapejs }}','{{ product.tags|escapejs }}')">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn-mp" style="padding:6px 10px;font-size:12px;background:#dcfce7;color:#16a34a;" title="Restock"
+                          onclick="openRestock('{{ product.id }}','{{ product.name|escapejs }}')">
+                    <i class="bi bi-plus-circle"></i>
+                  </button>
+                  <button class="btn-mp" style="padding:6px 10px;font-size:12px;background:#fef9c3;color:#a16207;" title="Inventory"
+                          onclick="openInventory('{{ product.id }}','{{ product.name|escapejs }}')">
+                    <i class="bi bi-clipboard-data"></i>
+                  </button>
+                  <form method="post" action="{% url 'delete_product' product.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-mp btn-mp-danger" style="padding:6px 10px;font-size:12px;" title="Deactivate"
+                            data-swal-confirm="Deactivate '{{ product.name|escapejs }}'?">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7">
+              <div class="empty-state" style="padding:40px;">
+                <i class="bi bi-box" style="font-size:32px;"></i>
+                <p>No products yet.</p>
+                <button class="btn-mp btn-mp-primary" onclick="showModal('addProductModal')" style="margin-top:8px;font-size:14px;">Add Your First Product</button>
+              </div>
+            </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDERS TAB -->
+  <div id="pane-orders" style="display:none;">
+    <div class="mp-card">
+      <div class="mp-card-body" style="padding:0;">
+        <table class="mp-table" id="ordersTable">
+          <thead><tr><th>Order</th><th>Product</th><th>Buyer</th><th>Amount</th><th>Status</th><th>Date</th><th></th></tr></thead>
+          <tbody>
+            {% for order in orders %}
+            <tr>
+              <td style="font-weight:700;font-size:14px;color:#64748b;font-family:monospace;">#{{ order.id|stringformat:"s"|slice:":8" }}</td>
+              <td style="font-weight:600;">{{ order.product.name }}</td>
+              <td>{{ order.buyer.username }}</td>
+              <td style="font-weight:700;color:#1a56db;">{{ order.total_price }} {{ order.currency }}</td>
+              <td>
+                <span class="mp-badge {% if order.status == 'completed' %}badge-green{% elif order.status == 'paid' %}badge-sky{% elif order.status == 'shipped' %}badge-yellow{% elif order.status == 'disputed' %}badge-red{% else %}badge-gray{% endif %}" style="font-size:11px;">
+                  {{ order.get_status_display }}
+                </span>
+              </td>
+              <td style="font-size:13px;color:#94a3b8;">{{ order.created_at|date:"M d, Y" }}</td>
+              <td><a href="{% url 'order_detail' order.id %}" class="btn-mp btn-mp-light" style="padding:6px 14px;font-size:13px;">Manage</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="empty-state" style="padding:40px;">No orders yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- STOCK LOG TAB -->
+  <div id="pane-stock" style="display:none;">
+    <div class="mp-card">
+      <div class="mp-card-body" style="padding:0;">
+        <table class="mp-table" id="stockTable">
+          <thead><tr><th>Product</th><th>Action</th><th>Change</th><th>Before</th><th>After</th><th>Note</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for log in recent_stock_logs %}
+            <tr>
+              <td style="font-weight:600;">{{ log.product.name }}</td>
+              <td><span class="mp-badge {% if log.action == 'restock' %}badge-green{% elif log.action == 'sale' %}badge-blue{% elif log.action == 'damage' %}badge-red{% else %}badge-gray{% endif %}" style="font-size:11px;">{{ log.get_action_display }}</span></td>
+              <td style="font-weight:700;color:{% if log.quantity_change > 0 %}#16a34a{% else %}#ef4444{% endif %};">{% if log.quantity_change > 0 %}+{% endif %}{{ log.quantity_change }}</td>
+              <td>{{ log.quantity_before }}</td>
+              <td style="font-weight:700;">{{ log.quantity_after }}</td>
+              <td style="font-size:13px;color:#64748b;">{{ log.note|default:"—" }}</td>
+              <td style="font-size:13px;color:#94a3b8;">{{ log.created_at|date:"M d, H:i" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="empty-state" style="padding:40px;">No stock logs yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRENDS TAB -->
+  <div id="pane-trends" style="display:none;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div class="mp-card">
+        <div class="mp-card-header"><h3 style="font-size:16px;font-weight:700;margin:0;"><i class="bi bi-fire text-blue"></i> Top Products by Sales</h3></div>
+        <div class="mp-card-body" style="padding:0;">
+          <table class="mp-table">
+            <thead><tr><th>#</th><th>Product</th><th>Sales</th><th>Revenue</th></tr></thead>
+            <tbody>
+              {% for t in product_trends %}
+              <tr>
+                <td style="font-weight:700;color:#94a3b8;">{{ forloop.counter }}</td>
+                <td style="font-weight:600;">{{ t.product__name }}</td>
+                <td><span class="mp-badge badge-blue" style="font-size:11px;">{{ t.sales }}</span></td>
+                <td style="font-weight:700;color:#1a56db;">{{ t.revenue|floatformat:4 }} ETH</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" style="text-align:center;padding:24px;color:#94a3b8;">No sales data yet</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="mp-card">
+        <div class="mp-card-header"><h3 style="font-size:16px;font-weight:700;margin:0;"><i class="bi bi-pie-chart text-blue"></i> Order Status Distribution</h3></div>
+        <div class="mp-card-body" style="display:flex;align-items:center;justify-content:center;">
+          <canvas id="sellerStatusChart" style="max-height:220px;"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endif %}
+</div>
+
+<!-- ── MODALS ───────────────────────────────── -->
+
+<!-- Register Shop -->
+<div id="registerShopModal" class="mp-modal-backdrop" style="display:none;">
+  <div class="mp-modal-box" style="max-width:560px;">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-shop-window"></i> Register Your Shop</h5><button onclick="hideModal('registerShopModal')" class="btn-close"></button></div>
+    <form method="post" action="{% url 'register_shop' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Shop Name *</label><input type="text" name="name" class="mp-form-control" required placeholder="Your store name"></div>
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Description</label><textarea name="description" class="mp-form-control" rows="3" placeholder="Tell buyers about your shop..."></textarea></div>
+          <div class="mb-3"><label class="mp-label">Email</label><input type="email" name="email" class="mp-form-control" placeholder="shop@email.com"></div>
+          <div class="mb-3"><label class="mp-label">Phone</label><input type="text" name="phone" class="mp-form-control" placeholder="+1 555 000 0000"></div>
+          <div class="mb-3"><label class="mp-label">City</label><input type="text" name="city" class="mp-form-control"></div>
+          <div class="mb-3"><label class="mp-label">Country</label><input type="text" name="country" class="mp-form-control"></div>
+        </div>
+        <div style="background:#f0f7ff;border-radius:10px;padding:12px 14px;font-size:14px;color:#1e40af;border:1px solid #dbeafe;display:flex;gap:8px;">
+          <i class="bi bi-info-circle-fill" style="flex-shrink:0;"></i>
+          <span>Your shop will be active immediately. All sales use blockchain escrow protection.</span>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn-mp btn-mp-light" onclick="hideModal('registerShopModal')">Cancel</button><button type="submit" class="btn-mp btn-mp-primary"><i class="bi bi-shop-window"></i> Open My Shop</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Shop -->
+{% if shop %}
+<div id="editShopModal" class="mp-modal-backdrop" style="display:none;">
+  <div class="mp-modal-box" style="max-width:560px;">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-pencil"></i> Edit Shop</h5><button onclick="hideModal('editShopModal')" class="btn-close"></button></div>
+    <form method="post" action="{% url 'update_shop' %}">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Shop Name *</label><input type="text" name="name" class="mp-form-control" value="{{ shop.name }}" required></div>
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Description</label><textarea name="description" class="mp-form-control" rows="3">{{ shop.description }}</textarea></div>
+          <div class="mb-3"><label class="mp-label">Email</label><input type="email" name="email" class="mp-form-control" value="{{ shop.email }}"></div>
+          <div class="mb-3"><label class="mp-label">Phone</label><input type="text" name="phone" class="mp-form-control" value="{{ shop.phone }}"></div>
+          <div class="mb-3"><label class="mp-label">City</label><input type="text" name="city" class="mp-form-control" value="{{ shop.city }}"></div>
+          <div class="mb-3"><label class="mp-label">Country</label><input type="text" name="country" class="mp-form-control" value="{{ shop.country }}"></div>
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Address</label><input type="text" name="address" class="mp-form-control" value="{{ shop.address }}"></div>
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Website</label><input type="url" name="website" class="mp-form-control" value="{{ shop.website }}" placeholder="https://..."></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn-mp btn-mp-light" onclick="hideModal('editShopModal')">Cancel</button><button type="submit" class="btn-mp btn-mp-primary"><i class="bi bi-save"></i> Save Changes</button></div>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+<!-- Add Product -->
+<div id="addProductModal" class="mp-modal-backdrop" style="display:none;">
+  <div class="mp-modal-box" style="max-width:620px;">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-plus-circle"></i> Add New Product</h5><button onclick="hideModal('addProductModal')" class="btn-close"></button></div>
+    <form method="post" action="{% url 'add_product' %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Product Name *</label><input type="text" name="name" class="mp-form-control" required placeholder="Enter product name"></div>
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Description</label><textarea name="description" class="mp-form-control" rows="3" placeholder="Describe your product..."></textarea></div>
+          <div class="mb-3"><label class="mp-label">Price *</label><input type="number" name="price" class="mp-form-control" step="0.0001" required placeholder="0.0000"></div>
+          <div class="mb-3"><label class="mp-label">Currency</label><select name="currency" class="mp-form-control"><option value="ETH">ETH</option><option value="USD">USD</option></select></div>
+          <div class="mb-3"><label class="mp-label">Quantity *</label><input type="number" name="quantity_available" class="mp-form-control" value="1" min="0" required></div>
+          <div class="mb-3"><label class="mp-label">Low Stock Alert At</label><input type="number" name="low_stock_threshold" class="mp-form-control" value="5" min="0"></div>
+          <div class="mb-3"><label class="mp-label">Category</label><select name="category" class="mp-form-control"><option value="">— None —</option>{% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}</select></div>
+          <div class="mb-3"><label class="mp-label">Condition</label><select name="condition" class="mp-form-control"><option value="new">New</option><option value="like_new">Like New</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option></select></div>
+          <div class="mb-3"><label class="mp-label">SKU</label><input type="text" name="sku" class="mp-form-control" placeholder="Optional unique SKU"></div>
+          <div class="mb-3"><label class="mp-label">Tags (comma separated)</label><input type="text" name="tags" class="mp-form-control" placeholder="electronics, gaming, portable"></div>
+          <div class="mb-3" style="grid-column:1/-1;display:flex;align-items:center;gap:12px;">
+            <input type="checkbox" name="is_featured" id="ap-featured" style="width:18px;height:18px;accent-color:#1a56db;">
+            <label for="ap-featured" class="mp-label" style="margin:0;cursor:pointer;">Mark as Featured</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn-mp btn-mp-light" onclick="hideModal('addProductModal')">Cancel</button><button type="submit" class="btn-mp btn-mp-primary"><i class="bi bi-check-circle"></i> Add Product</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Product -->
+<div id="editProductModal" class="mp-modal-backdrop" style="display:none;">
+  <div class="mp-modal-box" style="max-width:620px;">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-pencil"></i> Edit Product</h5><button onclick="hideModal('editProductModal')" class="btn-close"></button></div>
+    <form method="post" action="" id="editProductForm">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Product Name *</label><input type="text" name="name" id="ep-name" class="mp-form-control" required></div>
+          <div class="mb-3" style="grid-column:1/-1;"><label class="mp-label">Description</label><textarea name="description" id="ep-desc" class="mp-form-control" rows="3"></textarea></div>
+          <div class="mb-3"><label class="mp-label">Price *</label><input type="number" name="price" id="ep-price" class="mp-form-control" step="0.0001" required></div>
+          <div class="mb-3"><label class="mp-label">Currency</label><select name="currency" id="ep-currency" class="mp-form-control"><option value="ETH">ETH</option><option value="USD">USD</option></select></div>
+          <div class="mb-3"><label class="mp-label">Category</label><select name="category" class="mp-form-control"><option value="">— None —</option>{% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}</select></div>
+          <div class="mb-3"><label class="mp-label">Condition</label><select name="condition" id="ep-condition" class="mp-form-control"><option value="new">New</option><option value="like_new">Like New</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option></select></div>
+          <div class="mb-3"><label class="mp-label">Low Stock Alert At</label><input type="number" name="low_stock_threshold" id="ep-threshold" class="mp-form-control" min="0"></div>
+          <div class="mb-3"><label class="mp-label">Tags</label><input type="text" name="tags" id="ep-tags" class="mp-form-control"></div>
+          <div class="mb-2" style="display:flex;align-items:center;gap:10px;"><input type="checkbox" name="is_active" id="ep-active" style="width:18px;height:18px;accent-color:#1a56db;"><label for="ep-active" class="mp-label" style="margin:0;cursor:pointer;">Active</label></div>
+          <div class="mb-2" style="display:flex;align-items:center;gap:10px;"><input type="checkbox" name="is_featured" id="ep-featured" style="width:18px;height:18px;accent-color:#1a56db;"><label for="ep-featured" class="mp-label" style="margin:0;cursor:pointer;">Featured</label></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn-mp btn-mp-light" onclick="hideModal('editProductModal')">Cancel</button><button type="submit" class="btn-mp btn-mp-primary"><i class="bi bi-save"></i> Save Changes</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Restock -->
+<div id="restockModal" class="mp-modal-backdrop" style="display:none;">
+  <div class="mp-modal-box" style="max-width:420px;">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-plus-circle"></i> Restock Product</h5><button onclick="hideModal('restockModal')" class="btn-close"></button></div>
+    <form method="post" action="" id="restockForm">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div style="background:#f0f7ff;border-radius:10px;padding:14px;margin-bottom:20px;border:1px solid #dbeafe;">
+          <div style="font-size:12px;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;">Product</div>
+          <div style="font-size:17px;font-weight:700;color:#1e293b;" id="restock-name">—</div>
+        </div>
+        <div class="mb-3"><label class="mp-label">Units to Add *</label><input type="number" name="quantity" class="mp-form-control" min="1" value="10" required></div>
+        <div class="mb-3"><label class="mp-label">Note</label><input type="text" name="note" class="mp-form-control" placeholder="e.g. Supplier delivery batch 5"></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn-mp btn-mp-light" onclick="hideModal('restockModal')">Cancel</button><button type="submit" class="btn-mp btn-mp-success"><i class="bi bi-check-circle"></i> Confirm Restock</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Inventory Adjustment -->
+<div id="inventoryModal" class="mp-modal-backdrop" style="display:none;">
+  <div class="mp-modal-box" style="max-width:420px;">
+    <div class="modal-header"><h5 class="modal-title"><i class="bi bi-clipboard-data"></i> Inventory Adjustment</h5><button onclick="hideModal('inventoryModal')" class="btn-close"></button></div>
+    <form method="post" action="" id="inventoryForm">
+      {% csrf_token %}
+      <div class="modal-body">
+        <div style="background:#f0f7ff;border-radius:10px;padding:14px;margin-bottom:20px;border:1px solid #dbeafe;">
+          <div style="font-size:12px;color:#94a3b8;text-transform:uppercase;margin-bottom:4px;">Product</div>
+          <div style="font-size:17px;font-weight:700;color:#1e293b;" id="inventory-name">—</div>
+        </div>
+        <div class="mb-3">
+          <label class="mp-label">Adjustment Type</label>
+          <select name="action" class="mp-form-control">
+            <option value="adjustment">General Adjustment</option>
+            <option value="return">Customer Return</option>
+            <option value="damage">Damaged / Loss</option>
+          </select>
+        </div>
+        <div class="mb-3"><label class="mp-label">Quantity Change (use negative for reduction)</label><input type="number" name="quantity_change" class="mp-form-control" placeholder="e.g. -5 or 10" required></div>
+        <div class="mb-3"><label class="mp-label">Reason / Note</label><input type="text" name="note" class="mp-form-control" placeholder="Reason for adjustment"></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn-mp btn-mp-light" onclick="hideModal('inventoryModal')">Cancel</button><button type="submit" class="btn-mp btn-mp-warning"><i class="bi bi-check-circle"></i> Apply Adjustment</button></div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(document).ready(function() {
+  $('#productTable').DataTable({ pageLength: 15 });
+  $('#ordersTable').DataTable({ pageLength: 15, order: [[5,'desc']] });
+  $('#stockTable').DataTable({ pageLength: 20, order: [[6,'desc']] });
+});
+
+function switchTab(name) {
+  ['products','orders','stock','trends'].forEach(t => {
+    const pane = document.getElementById('pane-' + t);
+    const btn  = document.getElementById('tab-' + t);
+    if (!pane || !btn) return;
+    pane.style.display   = t === name ? '' : 'none';
+    btn.style.color      = t === name ? '#1a56db' : '#64748b';
+    btn.style.fontWeight = t === name ? '700' : '600';
+    btn.style.borderBottom = t === name ? '2px solid #1a56db' : '2px solid transparent';
+  });
+}
+
+document.querySelectorAll('.mp-modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.style.display = 'none'; });
+});
+
+function openEditProduct(id, name, price, currency, condition, qty, threshold, active, featured, desc, tags) {
+  document.getElementById('editProductForm').action = '/supplier/edit-product/' + id + '/';
+  document.getElementById('ep-name').value       = name;
+  document.getElementById('ep-price').value      = price;
+  document.getElementById('ep-currency').value   = currency;
+  document.getElementById('ep-condition').value  = condition;
+  document.getElementById('ep-threshold').value  = threshold;
+  document.getElementById('ep-active').checked   = active === 'true';
+  document.getElementById('ep-featured').checked = featured === 'true';
+  document.getElementById('ep-desc').value       = desc;
+  document.getElementById('ep-tags').value       = tags;
+  showModal('editProductModal');
+}
+
+function openRestock(id, name) {
+  document.getElementById('restockForm').action = '/supplier/restock/' + id + '/';
+  document.getElementById('restock-name').textContent = name;
+  showModal('restockModal');
+}
+
+function openInventory(id, name) {
+  document.getElementById('inventoryForm').action = '/supplier/inventory/' + id + '/';
+  document.getElementById('inventory-name').textContent = name;
+  showModal('inventoryModal');
+}
+
+// Trends chart
+{% if product_trends %}
+const statusColors = { completed:'#22c55e', paid:'#0ea5e9', shipped:'#f59e0b', disputed:'#ef4444', pending:'#94a3b8', escrow_created:'#6366f1', refunded:'#8b5cf6', cancelled:'#6b7280' };
+const ordersData = {{ orders|length }};
+if (document.getElementById('sellerStatusChart')) {
+  const statusCounts = {};
+  {% for order in orders %}statusCounts['{{ order.status }}'] = (statusCounts['{{ order.status }}'] || 0) + 1;{% endfor %}
+  new Chart(document.getElementById('sellerStatusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(statusCounts).map(s => s.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase())),
+      datasets: [{ data: Object.values(statusCounts), backgroundColor: Object.keys(statusCounts).map(s => statusColors[s]||'#94a3b8'), borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: { cutout: '60%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Plus Jakarta Sans', size: 12 }, boxWidth: 12, padding: 12 } } } }
+  });
+}
+{% endif %}
+</script>
+{% endblock %}

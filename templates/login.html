@@ -3,166 +3,487 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Login</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<title>MarketPro — Sign In</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
+:root {
+  --ink:     #0a0f1e;
+  --ink2:    #111827;
+  --white:   #ffffff;
+  --blue:    #1a56db;
+  --sky:     #38bdf8;
+  --indigo:  #818cf8;
+  --slate:   #64748b;
+  --border:  rgba(255,255,255,0.10);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--ink); color: var(--white); overflow: hidden; height: 100vh; }
 
-body{
-    background:#f3f4f6;
-    font-family:'Segoe UI',sans-serif;
-    height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+/* ── FULL PAGE CANVAS ── */
+.page {
+  position: relative; width: 100vw; height: 100vh;
+  display: grid; grid-template-columns: 1fr 1fr;
+  overflow: hidden;
 }
 
-.login-container{
-    width:100%;
-    max-width:420px;
-    background:white;
-    padding:40px;
-    border-radius:14px;
-    box-shadow:0 12px 35px rgba(0,0,0,0.08);
-    animation:fadeIn .5s ease;
+/* ── PARTICLES ── */
+#particles-login { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+
+/* ── GRADIENT MESH ── */
+.mesh {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 55% at 30% 50%, rgba(26,86,219,.22) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 80% 20%, rgba(14,165,233,.14) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 70% 85%, rgba(129,140,248,.10) 0%, transparent 55%);
 }
 
-@keyframes fadeIn{
-    from{
-        opacity:0;
-        transform:translateY(10px);
-    }
-    to{
-        opacity:1;
-        transform:translateY(0);
-    }
+/* ── BOBBING SPHERES ── */
+.sphere {
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 2;
+}
+.s1 {
+  width: 320px; height: 320px; top: -100px; left: -100px;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.08), rgba(26,86,219,.22) 60%, transparent 100%);
+  border: 1px solid rgba(255,255,255,.07);
+  animation: bob1 9s ease-in-out infinite;
+}
+.s2 {
+  width: 140px; height: 140px; bottom: 10%; left: 5%;
+  background: radial-gradient(circle at 40% 35%, rgba(255,255,255,.15), rgba(56,189,248,.20) 60%, transparent 100%);
+  border: 1px solid rgba(56,189,248,.18);
+  animation: bob2 6s ease-in-out infinite 1s;
+}
+.s3 {
+  width: 80px; height: 80px; top: 30%; left: 44%;
+  background: radial-gradient(circle at 40% 40%, rgba(255,255,255,.25), rgba(129,140,248,.20) 60%);
+  border: 1px solid rgba(255,255,255,.12);
+  animation: bob1 4.5s ease-in-out infinite reverse;
+}
+.s4 {
+  width: 200px; height: 200px; bottom: -60px; right: 5%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.06), rgba(26,86,219,.15) 60%, transparent 100%);
+  border: 1px solid rgba(255,255,255,.06);
+  animation: bob3 11s ease-in-out infinite;
+}
+.s5 {
+  width: 60px; height: 60px; top: 15%; right: 8%;
+  background: radial-gradient(circle at 40% 40%, rgba(56,189,248,.30), rgba(26,86,219,.20) 70%);
+  border: 1px solid rgba(56,189,248,.22);
+  animation: bob2 5s ease-in-out infinite 0.5s;
 }
 
-.login-title{
-    font-weight:700;
-    margin-bottom:25px;
+/* ── GEO SHAPES ── */
+.geo { position: absolute; pointer-events: none; z-index: 2; }
+.g-tri {
+  width: 0; height: 0;
+  border-left: 20px solid transparent; border-right: 20px solid transparent;
+  border-bottom: 34px solid rgba(56,189,248,.18);
+  top: 55%; left: 42%;
+  animation: bob2 7s ease-in-out infinite;
+}
+.g-ring {
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 2px solid rgba(56,189,248,.20);
+  top: 70%; left: 20%;
+  animation: bob3 8s ease-in-out infinite 1s;
+}
+.g-sq {
+  width: 28px; height: 28px;
+  border: 2px solid rgba(255,255,255,.14);
+  transform: rotate(45deg);
+  top: 18%; left: 25%;
+  animation: bob1 6s ease-in-out infinite 2s;
+}
+.g-hex {
+  width: 40px; height: 40px;
+  background: rgba(129,140,248,.12);
+  clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  bottom: 30%; right: 10%;
+  animation: bob2 9s ease-in-out infinite;
+}
+.g-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(56,189,248,.50);
+  top: 45%; left: 10%;
+  animation: bob1 3.5s ease-in-out infinite;
 }
 
-.form-control{
-    border-radius:8px;
-    padding:12px;
+@keyframes bob1 { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-20px) rotate(4deg)} }
+@keyframes bob2 { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-13px) rotate(-5deg)} }
+@keyframes bob3 { 0%,100%{transform:translateY(0)} 33%{transform:translateY(-16px)} 66%{transform:translateY(-7px)} }
+
+/* ── LEFT PANEL (blockchain visual) ── */
+.left-panel {
+  position: relative; z-index: 3;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 48px 56px;
+  overflow: hidden;
+}
+.brand-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px; font-weight: 800; color: #fff;
+  margin-bottom: 48px; position: relative; z-index: 4;
+  text-decoration: none; display: inline-block;
+}
+.brand-logo span { color: var(--sky); }
+
+.left-copy { position: relative; z-index: 4; }
+.left-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px; padding: 5px 14px;
+  font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  color: #93c5fd; margin-bottom: 20px;
+}
+.left-headline {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(32px, 3.5vw, 50px); font-weight: 800;
+  line-height: 1.05; letter-spacing: -1.5px; color: #fff; margin-bottom: 14px;
+  animation: fadeUp .7s ease both;
+}
+.left-headline .grad {
+  background: linear-gradient(120deg, #38bdf8 0%, #a5b4fc 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.left-sub { font-size: 15px; color: #94a3b8; line-height: 1.7; max-width: 340px; margin-bottom: 36px; }
+
+.feat-list { display: flex; flex-direction: column; gap: 12px; }
+.feat-item {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 14px; color: #bae6fd; font-weight: 500;
+}
+.feat-icon {
+  width: 32px; height: 32px; flex-shrink: 0; border-radius: 9px;
+  background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.12);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--sky);
 }
 
-.form-control:focus{
-    border-color:#ffd814;
-    box-shadow:0 0 0 3px rgba(255,216,20,.25);
+/* ── BLOCKCHAIN SVG (left panel overlay) ── */
+.bc-svg {
+  position: absolute; right: -30px; top: 50%; transform: translateY(-50%);
+  width: 55%; opacity: .70; z-index: 3; pointer-events: none;
 }
 
-.btn-login{
-    background:#ffd814;
-    border:none;
-    font-weight:600;
-    padding:12px;
-    border-radius:8px;
-    transition:.2s;
+/* ── RIGHT PANEL (form) ── */
+.right-panel {
+  position: relative; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 32px;
 }
 
-.btn-login:hover{
-    background:#f7ca00;
+/* Frosted card */
+.form-card {
+  width: 100%; max-width: 440px;
+  background: rgba(255,255,255,.05);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 24px;
+  padding: 44px 40px;
+  box-shadow: 0 32px 80px rgba(0,0,0,.50), inset 0 1px 0 rgba(255,255,255,.08);
+  animation: fadeUp .7s ease .1s both;
 }
 
-.password-toggle{
-    cursor:pointer;
-    font-size:14px;
-    position:absolute;
-    right:12px;
-    top:50%;
-    transform:translateY(-50%);
-    color:#666;
+.form-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px; font-weight: 800; color: #fff;
+  letter-spacing: -0.5px; margin-bottom: 4px;
+}
+.form-sub { font-size: 14px; color: var(--slate); margin-bottom: 28px; }
+
+.field-label {
+  display: block; font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: #94a3b8; margin-bottom: 8px;
+}
+.field-wrap { position: relative; margin-bottom: 20px; }
+.field-input {
+  width: 100%; font-family: 'DM Sans', sans-serif; font-size: 15px;
+  padding: 13px 16px 13px 44px;
+  background: rgba(255,255,255,.07);
+  border: 1.5px solid rgba(255,255,255,.12);
+  border-radius: 12px; outline: none; color: #fff;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.field-input::placeholder { color: #475569; }
+.field-input:focus {
+  border-color: var(--sky);
+  background: rgba(56,189,248,.06);
+  box-shadow: 0 0 0 3px rgba(56,189,248,.15);
+}
+.field-icon {
+  position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  font-size: 16px; color: #475569; pointer-events: none;
+  transition: color .2s;
+}
+.field-wrap:focus-within .field-icon { color: var(--sky); }
+.pass-toggle {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  cursor: pointer; color: #475569; font-size: 15px; background: none; border: none;
+  padding: 4px; transition: color .2s;
+}
+.pass-toggle:hover { color: var(--sky); }
+
+.row-between {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 24px; font-size: 13px;
+}
+.remember-label {
+  display: flex; align-items: center; gap: 8px; cursor: pointer; color: #94a3b8;
+}
+.remember-label input[type="checkbox"] {
+  accent-color: var(--sky); width: 15px; height: 15px; cursor: pointer;
+}
+.forgot-link { color: var(--sky); text-decoration: none; font-weight: 600; }
+.forgot-link:hover { color: #7dd3fc; }
+
+.btn-submit {
+  width: 100%; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700;
+  padding: 14px; border-radius: 12px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--blue) 0%, #0ea5e9 100%);
+  color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all .2s; letter-spacing: .3px;
+  box-shadow: 0 8px 24px rgba(26,86,219,.35);
+}
+.btn-submit:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(26,86,219,.50); }
+.btn-submit:active { transform: translateY(0); }
+
+.alert-error {
+  background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.30);
+  color: #fca5a5; border-radius: 12px; padding: 12px 16px;
+  font-size: 13px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 8px;
 }
 
-.input-group{
-    position:relative;
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 24px 0; color: #334155; font-size: 12px;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.08);
 }
 
-.extra-links{
-    display:flex;
-    justify-content:space-between;
-    font-size:14px;
+.form-footer { text-align: center; font-size: 14px; color: var(--slate); margin-top: 22px; }
+.form-footer a { color: var(--sky); font-weight: 600; text-decoration: none; }
+.form-footer a:hover { color: #7dd3fc; }
+
+/* Scan line decoration on card */
+.form-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56,189,248,.40), transparent);
+  border-radius: 24px 24px 0 0;
+}
+.form-card { position: relative; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.register-link a{
-    text-decoration:none;
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  body { overflow-y: auto; }
+  .page { grid-template-columns: 1fr; height: auto; min-height: 100vh; }
+  .left-panel { display: none; }
+  .right-panel { padding: 40px 20px; min-height: 100vh; }
+  .form-card { padding: 32px 24px; }
+  .s1, .s2, .s3, .s4 { display: none; }
 }
-
-.register-link a:hover{
-    text-decoration:underline;
-}
-
 </style>
 </head>
-
 <body>
 
-<div class="login-container">
+<div class="page">
+  <!-- BG layers -->
+  <div id="particles-login"></div>
+  <div class="mesh"></div>
 
-<h3 class="login-title text-center">Sign In</h3>
+  <!-- Spheres -->
+  <div class="sphere s1"></div>
+  <div class="sphere s2"></div>
+  <div class="sphere s3"></div>
+  <div class="sphere s4"></div>
+  <div class="sphere s5"></div>
 
-{% if error %}
-<div class="alert alert-danger">{{ error }}</div>
-{% endif %}
+  <!-- Geo shapes -->
+  <div class="geo g-tri"></div>
+  <div class="geo g-ring"></div>
+  <div class="geo g-sq"></div>
+  <div class="geo g-hex"></div>
+  <div class="geo g-dot"></div>
 
-<form method="POST">
-{% csrf_token %}
+  <!-- ── LEFT PANEL ── -->
+  <div class="left-panel">
+    <a href="{% url 'home' %}" class="brand-logo">Market<span>Pro</span></a>
 
-<div class="form-floating mb-3">
-<input type="text" name="username" class="form-control" placeholder="Username" required>
-<label>Username</label>
+    <div class="left-copy">
+      <div class="left-eyebrow"><i class="bi bi-shield-lock-fill"></i> Blockchain Secured</div>
+      <h1 class="left-headline">Secure Escrow<br><span class="grad">Marketplace</span></h1>
+      <p class="left-sub">Every transaction is locked in a smart contract until you confirm delivery. Zero fraud, zero risk.</p>
+      <div class="feat-list">
+        <div class="feat-item"><div class="feat-icon"><i class="bi bi-shield-check"></i></div> Blockchain-backed escrow on every order</div>
+        <div class="feat-item"><div class="feat-icon"><i class="bi bi-lightning-charge"></i></div> Instant on-chain settlement</div>
+        <div class="feat-item"><div class="feat-icon"><i class="bi bi-shop-window"></i></div> Verified seller storefronts</div>
+        <div class="feat-item"><div class="feat-icon"><i class="bi bi-graph-up-arrow"></i></div> Real-time analytics dashboard</div>
+      </div>
+    </div>
+
+    <!-- Blockchain SVG -->
+    <svg class="bc-svg" viewBox="0 0 380 520" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="rgba(56,189,248,0.18)" stroke-width="1">
+        <line x1="80" y1="80" x2="200" y2="160"/>
+        <line x1="200" y1="160" x2="320" y2="90"/>
+        <line x1="200" y1="160" x2="240" y2="280"/>
+        <line x1="240" y1="280" x2="320" y2="90"/>
+        <line x1="240" y1="280" x2="120" y2="300"/>
+        <line x1="120" y1="300" x2="80" y2="80"/>
+        <line x1="120" y1="300" x2="160" y2="420"/>
+        <line x1="160" y1="420" x2="300" y2="380"/>
+        <line x1="300" y1="380" x2="240" y2="280"/>
+        <line x1="80" y1="80" x2="30" y2="220"/>
+        <line x1="30" y1="220" x2="120" y2="300"/>
+      </g>
+      <g>
+        <line x1="200" y1="160" x2="240" y2="280" stroke="rgba(56,189,248,0.55)" stroke-width="1.5" stroke-dasharray="7 5">
+          <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.5s" repeatCount="indefinite"/>
+        </line>
+        <line x1="120" y1="300" x2="160" y2="420" stroke="rgba(129,140,248,0.45)" stroke-width="1" stroke-dasharray="6 7">
+          <animate attributeName="stroke-dashoffset" from="0" to="-26" dur="2.2s" repeatCount="indefinite"/>
+        </line>
+      </g>
+      <!-- Nodes -->
+      <g>
+        <circle cx="200" cy="160" r="18" fill="rgba(26,86,219,.22)" stroke="rgba(56,189,248,.50)" stroke-width="1.5">
+          <animate attributeName="r" values="18;22;18" dur="3s" repeatCount="indefinite"/>
+        </circle>
+        <polygon points="200,151 207,155.5 207,164.5 200,169 193,164.5 193,155.5" fill="rgba(26,86,219,.55)" stroke="rgba(56,189,248,.85)" stroke-width="1"/>
+        <text x="200" y="163" text-anchor="middle" fill="#bae6fd" font-size="6" font-family="monospace">0x2B</text>
+
+        <circle cx="240" cy="280" r="22" fill="rgba(26,86,219,.25)" stroke="rgba(129,140,248,.55)" stroke-width="1.5">
+          <animate attributeName="r" values="22;26;22" dur="2.8s" repeatCount="indefinite" begin=".8s"/>
+        </circle>
+        <polygon points="240,269 249,274 249,286 240,291 231,286 231,274" fill="rgba(26,86,219,.55)" stroke="rgba(129,140,248,.80)" stroke-width="1.5"/>
+        <text x="240" y="284" text-anchor="middle" fill="#e0e7ff" font-size="6" font-family="monospace">BLK</text>
+
+        <circle cx="80" cy="80" r="14" fill="rgba(14,165,233,.15)" stroke="rgba(56,189,248,.38)" stroke-width="1">
+          <animate attributeName="r" values="14;17;14" dur="4s" repeatCount="indefinite"/>
+        </circle>
+        <polygon points="80,73 86,76.5 86,83.5 80,87 74,83.5 74,76.5" fill="rgba(14,165,233,.40)" stroke="rgba(56,189,248,.65)" stroke-width="1"/>
+
+        <circle cx="320" cy="90" r="13" fill="rgba(14,165,233,.12)" stroke="rgba(56,189,248,.32)" stroke-width="1">
+          <animate attributeName="r" values="13;16;13" dur="5s" repeatCount="indefinite" begin="1.2s"/>
+        </circle>
+        <polygon points="320,83 326,87 326,93 320,97 314,93 314,87" fill="rgba(14,165,233,.35)" stroke="rgba(56,189,248,.60)" stroke-width="1"/>
+
+        <circle cx="120" cy="300" r="16" fill="rgba(26,86,219,.18)" stroke="rgba(56,189,248,.38)" stroke-width="1">
+          <animate attributeName="r" values="16;20;16" dur="3.5s" repeatCount="indefinite" begin=".5s"/>
+        </circle>
+        <polygon points="120,292 127,296 127,304 120,308 113,304 113,296" fill="rgba(26,86,219,.45)" stroke="rgba(56,189,248,.70)" stroke-width="1"/>
+
+        <circle cx="160" cy="420" r="15" fill="rgba(14,165,233,.12)" stroke="rgba(56,189,248,.32)" stroke-width="1">
+          <animate attributeName="r" values="15;18;15" dur="4.5s" repeatCount="indefinite" begin="2s"/>
+        </circle>
+        <polygon points="160,413 166,416.5 166,423.5 160,427 154,423.5 154,416.5" fill="rgba(14,165,233,.35)" stroke="rgba(56,189,248,.60)" stroke-width="1"/>
+
+        <circle cx="300" cy="380" r="14" fill="rgba(26,86,219,.18)" stroke="rgba(56,189,248,.35)" stroke-width="1">
+          <animate attributeName="r" values="14;17;14" dur="3.8s" repeatCount="indefinite" begin="1.5s"/>
+        </circle>
+        <polygon points="300,373 306,376.5 306,383.5 300,387 294,383.5 294,376.5" fill="rgba(26,86,219,.42)" stroke="rgba(56,189,248,.65)" stroke-width="1"/>
+      </g>
+      <!-- Hash labels -->
+      <text x="215" y="145" fill="rgba(148,163,184,.50)" font-size="7" font-family="monospace">hash: 0xa8f3</text>
+      <text x="250" y="265" fill="rgba(148,163,184,.45)" font-size="6" font-family="monospace">nonce: 4821</text>
+      <text x="125" y="290" fill="rgba(148,163,184,.45)" font-size="6" font-family="monospace">prev: 0x3c1</text>
+      <!-- Travelling dot -->
+      <circle r="3" fill="#38bdf8" opacity=".85">
+        <animateMotion dur="3s" repeatCount="indefinite">
+          <mpath href="#lpath"/>
+        </animateMotion>
+      </circle>
+      <defs>
+        <path id="lpath" d="M200,160 L240,280 L120,300 L80,80 L200,160"/>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- ── RIGHT PANEL (FORM) ── -->
+  <div class="right-panel">
+    <div class="form-card">
+      <div class="form-title">Welcome back</div>
+      <div class="form-sub">Sign in to your MarketPro account</div>
+
+      {% if error %}
+      <div class="alert-error"><i class="bi bi-exclamation-circle-fill"></i> {{ error }}</div>
+      {% endif %}
+
+      <form method="POST" id="loginForm">
+        {% csrf_token %}
+
+        <div class="field-wrap">
+          <label class="field-label">Username</label>
+          <i class="bi bi-person field-icon"></i>
+          <input type="text" name="username" class="field-input" placeholder="Enter your username" required autofocus>
+        </div>
+
+        <div class="field-wrap">
+          <label class="field-label">Password</label>
+          <i class="bi bi-lock field-icon"></i>
+          <input type="password" name="password" id="passField" class="field-input" placeholder="Enter your password" required style="padding-right:44px;">
+          <button type="button" class="pass-toggle" onclick="togglePass('passField','passIcon')">
+            <i class="bi bi-eye" id="passIcon"></i>
+          </button>
+        </div>
+
+        <div class="row-between">
+          <label class="remember-label">
+            <input type="checkbox"> Remember me
+          </label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <i class="bi bi-box-arrow-in-right"></i> Sign In
+        </button>
+      </form>
+
+      <div class="divider">OR</div>
+
+      <div class="form-footer">
+        Don't have an account?
+        <a href="{% url 'register' %}">Create one free →</a>
+      </div>
+    </div>
+  </div>
 </div>
 
-<div class="form-floating mb-3 input-group">
-
-<input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
-
-<label>Password</label>
-
-<span class="password-toggle" onclick="togglePassword()">👁</span>
-
-</div>
-
-<div class="extra-links mb-3">
-<div>
-<input type="checkbox"> Remember me
-</div>
-
-<a href="#">Forgot password?</a>
-</div>
-
-<button class="btn btn-login w-100 mb-3">
-Sign In
-</button>
-
-</form>
-
-<div class="text-center register-link">
-<small>Don't have an account? <a href="#">Register</a></small>
-</div>
-
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
 <script>
+particlesJS('particles-login', {
+  particles: {
+    number: { value: 65, density: { enable: true, value_area: 800 } },
+    color: { value: ['#ffffff', '#000000', '#38bdf8', '#1a56db', '#818cf8'] },
+    shape: { type: ['circle', 'triangle', 'polygon'], polygon: { nb_sides: 6 } },
+    opacity: { value: 0.30, random: true, anim: { enable: true, speed: 0.7, opacity_min: 0.05, sync: false } },
+    size:    { value: 2.5, random: true, anim: { enable: true, speed: 1.5, size_min: 0.4, sync: false } },
+    line_linked: { enable: true, distance: 120, color: '#38bdf8', opacity: 0.10, width: 1 },
+    move: { enable: true, speed: 0.7, direction: 'none', random: true, straight: false, out_mode: 'bounce' }
+  },
+  interactivity: {
+    detect_on: 'canvas',
+    events: { onhover: { enable: true, mode: 'grab' }, onclick: { enable: true, mode: 'push' }, resize: true },
+    modes: { grab: { distance: 120, line_linked: { opacity: 0.35 } }, push: { particles_nb: 2 } }
+  },
+  retina_detect: true
+});
 
-function togglePassword(){
-
-const pass=document.getElementById("password")
-
-if(pass.type==="password"){
-pass.type="text"
+function togglePass(fieldId, iconId) {
+  const f = document.getElementById(fieldId);
+  const i = document.getElementById(iconId);
+  f.type = f.type === 'password' ? 'text' : 'password';
+  i.className = f.type === 'password' ? 'bi bi-eye' : 'bi bi-eye-slash';
 }
-else{
-pass.type="password"
-}
-
-}
-
 </script>
-
 </body>
 </html>

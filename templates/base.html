@@ -1,0 +1,329 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}MarketPro{% endblock %}</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --mp-blue:#1a56db; --mp-blue-dark:#1e40af; --mp-blue-light:#3b82f6;
+  --mp-sky:#0ea5e9; --mp-white:#ffffff; --mp-bg:#f0f7ff; --mp-surface:#ffffff;
+  --mp-border:#dbeafe; --mp-text:#1e293b; --mp-muted:#64748b;
+  --mp-success:#22c55e; --mp-warning:#f59e0b; --mp-danger:#ef4444;
+  --mp-radius:14px; --mp-shadow:0 4px 20px rgba(26,86,219,.10);
+  --mp-shadow-lg:0 12px 40px rgba(26,86,219,.15);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;background:var(--mp-bg);color:var(--mp-text);min-height:100vh}
+.mp-announce{background:linear-gradient(90deg,#1a56db,#0ea5e9);color:#fff;text-align:center;padding:8px 1rem;font-size:13px;font-weight:500;letter-spacing:.2px}
+.mp-announce a{color:#bae6fd;text-decoration:underline}
+.mp-navbar{background:var(--mp-white);border-bottom:1px solid var(--mp-border);box-shadow:0 2px 12px rgba(26,86,219,.07);position:sticky;top:0;z-index:1000;padding:0 2rem;height:64px;display:flex;align-items:center;gap:1.5rem}
+.mp-brand{font-size:22px;font-weight:800;color:var(--mp-blue);text-decoration:none;display:flex;align-items:center;gap:.5rem;white-space:nowrap}
+.mp-brand .brand-dot{width:8px;height:8px;background:var(--mp-sky);border-radius:50%;display:inline-block}
+.mp-search{flex:1;max-width:480px}
+.mp-search .form-control{border:1.5px solid var(--mp-border);border-radius:10px 0 0 10px;padding:10px 16px;font-size:15px;font-family:inherit;outline:none;transition:border-color .2s}
+.mp-search .form-control:focus{border-color:var(--mp-blue-light);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.mp-search .btn-search{background:var(--mp-blue);color:#fff;border:none;border-radius:0 10px 10px 0;padding:10px 18px;font-size:15px;cursor:pointer;transition:background .2s}
+.mp-search .btn-search:hover{background:var(--mp-blue-dark)}
+.mp-nav-links{display:flex;align-items:center;gap:.25rem;margin-left:auto;list-style:none;padding:0;margin-bottom:0}
+.mp-nav-links .nav-link{color:var(--mp-muted)!important;font-size:14px;font-weight:500;padding:8px 12px;border-radius:8px;transition:all .2s;text-decoration:none;white-space:nowrap}
+.mp-nav-links .nav-link:hover,.mp-nav-links .nav-link.active{color:var(--mp-blue)!important;background:#eff6ff}
+.mp-nav-links .btn-logout{background:transparent;border:1.5px solid #fecaca;color:var(--mp-danger)!important;padding:7px 12px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s}
+.mp-nav-links .btn-logout:hover{background:var(--mp-danger);color:#fff!important;border-color:var(--mp-danger)}
+.role-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.role-admin{background:#fee2e2;color:#b91c1c}
+.role-seller{background:#dbeafe;color:#1a56db}
+.role-buyer{background:#dcfce7;color:#16a34a}
+.notif-bell{position:relative;cursor:pointer;padding:8px 10px;border-radius:8px;color:var(--mp-muted);font-size:18px;transition:all .2s}
+.notif-bell:hover{background:#eff6ff;color:var(--mp-blue)}
+.notif-badge{position:absolute;top:4px;right:4px;background:var(--mp-danger);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+.cart-nav-btn{position:relative;cursor:pointer;padding:8px 10px;border-radius:8px;color:var(--mp-muted);font-size:18px;transition:all .2s;background:none;border:none;line-height:1}
+.cart-nav-btn:hover{background:#eff6ff;color:var(--mp-blue)}
+.cart-nav-count{position:absolute;top:4px;right:4px;background:var(--mp-blue);color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;padding:0 3px}
+.mp-card{background:var(--mp-white);border-radius:var(--mp-radius);border:1px solid var(--mp-border);box-shadow:var(--mp-shadow);transition:box-shadow .2s,transform .2s}
+.mp-card:hover{box-shadow:var(--mp-shadow-lg)}
+.mp-card-header{padding:20px 24px;border-bottom:1px solid var(--mp-border);display:flex;align-items:center;justify-content:space-between}
+.mp-card-body{padding:24px}
+.btn-mp{font-family:inherit;font-size:15px;font-weight:600;padding:11px 22px;border-radius:10px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;text-decoration:none;transition:all .2s;white-space:nowrap}
+.btn-mp-primary{background:var(--mp-blue);color:#fff}
+.btn-mp-primary:hover{background:var(--mp-blue-dark);color:#fff;transform:translateY(-1px)}
+.btn-mp-light{background:#eff6ff;color:var(--mp-blue);border:1.5px solid var(--mp-border)}
+.btn-mp-light:hover{background:#dbeafe}
+.btn-mp-success{background:var(--mp-success);color:#fff}
+.btn-mp-success:hover{background:#16a34a;transform:translateY(-1px)}
+.btn-mp-warning{background:var(--mp-warning);color:#fff}
+.btn-mp-warning:hover{background:#d97706;transform:translateY(-1px)}
+.btn-mp-danger{background:var(--mp-danger);color:#fff}
+.btn-mp-danger:hover{background:#dc2626;transform:translateY(-1px)}
+.btn-mp-outline{background:transparent;color:var(--mp-blue);border:1.5px solid var(--mp-blue)}
+.btn-mp-outline:hover{background:var(--mp-blue);color:#fff}
+.mp-form-control{width:100%;padding:12px 16px;font-family:inherit;font-size:15px;border:1.5px solid var(--mp-border);border-radius:10px;outline:none;transition:border-color .2s,box-shadow .2s;background:#fff;color:var(--mp-text)}
+.mp-form-control:focus{border-color:var(--mp-blue-light);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+.mp-label{font-size:12px;font-weight:700;color:var(--mp-muted);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.4px}
+.mp-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.badge-blue{background:#dbeafe;color:var(--mp-blue)}
+.badge-green{background:#dcfce7;color:#16a34a}
+.badge-yellow{background:#fef9c3;color:#a16207}
+.badge-red{background:#fee2e2;color:#b91c1c}
+.badge-purple{background:#ede9fe;color:#7c3aed}
+.badge-gray{background:#f1f5f9;color:#475569}
+.badge-sky{background:#e0f2fe;color:#0369a1}
+.mp-table{width:100%;border-collapse:collapse}
+.mp-table thead th{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mp-muted);padding:12px 16px;background:#f8faff;border-bottom:2px solid var(--mp-border);white-space:nowrap}
+.mp-table tbody td{font-size:15px;padding:14px 16px;border-bottom:1px solid #f0f7ff;color:var(--mp-text);vertical-align:middle}
+.mp-table tbody tr:hover{background:#f8faff}
+.mp-table tbody tr:last-child td{border-bottom:none}
+.modal-content{border-radius:16px;border:1px solid var(--mp-border);box-shadow:var(--mp-shadow-lg);font-family:inherit}
+.modal-header{background:linear-gradient(135deg,var(--mp-blue) 0%,var(--mp-blue-dark) 100%);color:#fff;border-radius:16px 16px 0 0;padding:20px 24px;border:none}
+.modal-header .btn-close{filter:brightness(0) invert(1)}
+.modal-body{padding:28px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--mp-border)}
+.kpi-card{background:var(--mp-white);border-radius:var(--mp-radius);border:1px solid var(--mp-border);padding:20px 24px;display:flex;align-items:center;gap:16px;box-shadow:var(--mp-shadow);transition:box-shadow .2s,transform .2s}
+.kpi-card:hover{box-shadow:var(--mp-shadow-lg);transform:translateY(-2px)}
+.kpi-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.kpi-icon-blue{background:#dbeafe;color:var(--mp-blue)}
+.kpi-icon-green{background:#dcfce7;color:#16a34a}
+.kpi-icon-yellow{background:#fef9c3;color:#a16207}
+.kpi-icon-red{background:#fee2e2;color:#b91c1c}
+.kpi-icon-sky{background:#e0f2fe;color:#0369a1}
+.kpi-icon-purple{background:#ede9fe;color:#7c3aed}
+.kpi-value{font-size:28px;font-weight:800;color:var(--mp-text);line-height:1}
+.kpi-label{font-size:13px;color:var(--mp-muted);font-weight:500;margin-top:3px}
+.page-header{padding:24px 0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.page-header h1{font-size:26px;font-weight:800;color:var(--mp-text);margin:0}
+.page-header p{font-size:15px;color:var(--mp-muted);margin:4px 0 0}
+.order-timeline{display:flex;gap:0;margin:24px 0}
+.timeline-step{flex:1;position:relative;text-align:center}
+.timeline-step::before{content:'';position:absolute;top:18px;left:50%;width:100%;height:2px;background:var(--mp-border);z-index:0}
+.timeline-step:last-child::before{display:none}
+.timeline-dot{width:36px;height:36px;border-radius:50%;background:var(--mp-border);color:var(--mp-muted);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;margin:0 auto 8px;position:relative;z-index:1;border:2px solid #fff;transition:all .3s}
+.timeline-step.done .timeline-dot{background:var(--mp-success);color:#fff;border-color:#dcfce7}
+.timeline-step.active .timeline-dot{background:var(--mp-blue);color:#fff;border-color:#dbeafe;box-shadow:0 0 0 4px rgba(59,130,246,.2)}
+.timeline-step.done::before{background:var(--mp-success)}
+.timeline-label{font-size:12px;font-weight:600;color:var(--mp-muted);text-transform:uppercase;letter-spacing:.4px}
+.timeline-step.done .timeline-label{color:var(--mp-success)}
+.timeline-step.active .timeline-label{color:var(--mp-blue)}
+.mp-footer{background:var(--mp-white);border-top:1px solid var(--mp-border);padding:24px 2rem;font-size:14px;color:var(--mp-muted);margin-top:60px}
+.mp-sidebar{background:var(--mp-white);border:1px solid var(--mp-border);border-radius:var(--mp-radius);padding:20px}
+.sidebar-link{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;color:var(--mp-text);text-decoration:none;font-size:15px;font-weight:500;transition:all .2s;margin-bottom:4px}
+.sidebar-link:hover{background:#eff6ff;color:var(--mp-blue)}
+.sidebar-link.active{background:#dbeafe;color:var(--mp-blue);font-weight:600}
+.sidebar-link i{font-size:16px;width:20px;text-align:center}
+.mp-divider{border:none;border-top:1px solid var(--mp-border);margin:20px 0}
+.text-blue{color:var(--mp-blue)!important}
+.text-mp-muted{color:var(--mp-muted)!important}
+.bg-mp{background:var(--mp-bg)!important}
+.empty-state{text-align:center;padding:60px 20px;color:var(--mp-muted)}
+.empty-state i{font-size:48px;margin-bottom:16px;opacity:.4}
+.empty-state h4{font-size:20px;color:var(--mp-text)}
+.swal2-popup{font-family:'Plus Jakarta Sans',sans-serif!important;border-radius:16px!important}
+.swal2-title{font-size:22px!important;font-weight:700!important}
+.swal2-confirm{background:var(--mp-blue)!important;border-radius:9px!important}
+.swal2-cancel{border-radius:9px!important}
+/* modal backdrops */
+.mp-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:4000;display:flex;align-items:center;justify-content:center;padding:1rem}
+.mp-modal-box{background:#fff;border-radius:16px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,.2);max-height:90vh;overflow-y:auto}
+.mp-modal-box .modal-header{background:linear-gradient(135deg,#1a56db,#1e40af);border-radius:16px 16px 0 0;padding:18px 24px;color:#fff;display:flex;align-items:center;justify-content:space-between}
+.mp-modal-box .modal-header .btn-close{filter:brightness(0) invert(1)}
+.mp-modal-box .modal-body{padding:24px}
+.mp-modal-box .modal-footer{padding:14px 24px;border-top:1px solid #dbeafe;display:flex;gap:8px;justify-content:flex-end}
+@media(max-width:768px){
+  .mp-navbar{padding:0 1rem;flex-wrap:wrap;height:auto;padding:10px 1rem}
+  .mp-search{max-width:100%;order:3;width:100%;margin-top:8px}
+  .mp-nav-links{gap:.1rem}
+  .kpi-value{font-size:22px}
+  body{font-size:16px}
+}
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<div class="mp-announce">
+  🛡️ Every transaction protected by blockchain escrow &nbsp;·&nbsp;
+  <a href="{% url 'product_list' %}">Shop Now</a>
+</div>
+
+<nav class="mp-navbar">
+  <a class="mp-brand" href="{% url 'home' %}">
+    <i class="bi bi-shop"></i> MarketPro <span class="brand-dot"></span>
+  </a>
+
+  <form class="mp-search d-flex" method="GET" action="{% url 'product_list' %}">
+    <input type="text" name="q" class="form-control" placeholder="Search products..."
+           value="{{ request.GET.q|default:'' }}">
+    <button type="submit" class="btn-search"><i class="bi bi-search"></i></button>
+  </form>
+
+  <ul class="mp-nav-links">
+    <li><a class="nav-link" href="{% url 'product_list' %}"><i class="bi bi-grid"></i> Shop</a></li>
+
+    {% if request.user.is_authenticated %}
+      {% if request.user.is_staff %}
+        <li><a class="nav-link" href="{% url 'admin_dashboard' %}">
+          <span class="role-badge role-admin"><i class="bi bi-shield-fill"></i> Admin</span>
+        </a></li>
+        <li><a class="nav-link" href="{% url 'analytics' %}"><i class="bi bi-bar-chart"></i> Analytics</a></li>
+        <li><a class="nav-link" href="{% url 'kpi' %}"><i class="bi bi-graph-up-arrow"></i> KPI</a></li>
+      {% endif %}
+      {% if request.user.is_seller %}
+        <li><a class="nav-link" href="{% url 'supplier_dashboard' %}">
+          <span class="role-badge role-seller"><i class="bi bi-shop"></i> Seller</span>
+        </a></li>
+      {% else %}
+        <li><a class="nav-link" href="{% url 'supplier_dashboard' %}"><i class="bi bi-shop-window"></i> Sell</a></li>
+      {% endif %}
+
+      <!-- Cart button -->
+      <li>
+        <button class="cart-nav-btn" onclick="openCart ? openCart() : null" id="navCartBtn" title="Cart">
+          <i class="bi bi-cart3"></i>
+          <span class="cart-nav-count d-none" id="navCartCount">0</span>
+        </button>
+      </li>
+
+      <!-- Notifications -->
+      <li>
+        <a class="nav-link notif-bell" href="#" id="notifBell">
+          <i class="bi bi-bell"></i>
+          <span class="notif-badge d-none" id="notifCount">0</span>
+        </a>
+      </li>
+
+      <li><a class="nav-link" href="{% url 'buyer_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li><a class="nav-link" href="{% url 'wallet' %}"><i class="bi bi-person-circle"></i> Account</a></li>
+      <li><a class="btn-logout" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+    {% else %}
+      <li><a class="nav-link" href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
+      <li><a class="btn-mp btn-mp-primary" href="{% url 'register' %}" style="padding:8px 16px;font-size:14px;"><i class="bi bi-person-plus"></i> Register</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- Notification Dropdown -->
+<div id="notifDropdown" style="display:none;position:fixed;top:68px;right:1rem;width:340px;background:#fff;
+     border:1px solid var(--mp-border);border-radius:14px;box-shadow:var(--mp-shadow-lg);z-index:2000;max-height:420px;overflow-y:auto;">
+  <div style="padding:14px 16px;border-bottom:1px solid var(--mp-border);font-weight:700;font-size:15px;color:var(--mp-text);display:flex;align-items:center;justify-content:space-between;">
+    <span><i class="bi bi-bell-fill text-blue"></i> Notifications</span>
+    <button onclick="markAllRead()" style="background:none;border:none;font-size:12px;color:#1a56db;font-weight:600;cursor:pointer;font-family:inherit;">Mark all read</button>
+  </div>
+  <div id="notifList" style="padding:8px 0;"></div>
+  <div style="padding:10px 16px;border-top:1px solid var(--mp-border);text-align:center;">
+    <a href="{% url 'wallet' %}" style="font-size:13px;color:var(--mp-blue);text-decoration:none;font-weight:600;">View all</a>
+  </div>
+</div>
+
+<main style="min-height:calc(100vh - 100px);">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="mp-footer">
+  <div style="max-width:1400px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div><strong style="color:var(--mp-blue);">MarketPro</strong> — Secure Escrow Marketplace &copy; 2026</div>
+    <div style="display:flex;gap:20px;font-size:14px;">
+      <a href="#" style="color:var(--mp-muted);text-decoration:none;">Support</a>
+      <a href="#" style="color:var(--mp-muted);text-decoration:none;">Terms</a>
+      <a href="#" style="color:var(--mp-muted);text-decoration:none;">Privacy</a>
+    </div>
+    <div style="font-size:13px;color:var(--mp-muted);display:flex;align-items:center;gap:6px;">
+      <i class="bi bi-shield-check" style="color:#16a34a;"></i> Blockchain secured
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+<script>
+// ── Django messages → SweetAlert2 ─────────────
+{% if messages %}
+const _msgs = [
+  {% for msg in messages %}
+  { level: "{{ msg.tags }}", text: "{{ msg|escapejs }}" },
+  {% endfor %}
+];
+(function showMsgs(i) {
+  if (i >= _msgs.length) return;
+  const m = _msgs[i];
+  const ic = m.level.includes('error') ? 'error' : m.level.includes('warning') ? 'warning' : m.level.includes('success') ? 'success' : 'info';
+  Swal.fire({ icon: ic, title: ic.charAt(0).toUpperCase()+ic.slice(1), text: m.text, timer: 3500, timerProgressBar: true, showConfirmButton: false, toast: true, position: 'top-end' })
+    .then(() => showMsgs(i+1));
+})(0);
+{% endif %}
+
+// ── Notifications ──────────────────────────────
+const bell     = document.getElementById('notifBell');
+const dropdown = document.getElementById('notifDropdown');
+const badge    = document.getElementById('notifCount');
+const list     = document.getElementById('notifList');
+
+async function loadNotifs() {
+  try {
+    const r = await fetch('/api/notifications/');
+    const d = await r.json();
+    if (d.count > 0) { badge.textContent = d.count; badge.classList.remove('d-none'); }
+    else { badge.classList.add('d-none'); }
+    list.innerHTML = d.notifications.length
+      ? d.notifications.map(n => `
+          <a href="${n.link || '#'}" style="display:block;padding:12px 16px;border-bottom:1px solid #f0f7ff;text-decoration:none;transition:background .15s;" onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
+            <div style="font-size:14px;font-weight:600;color:#1e293b;">${n.title}</div>
+            <div style="font-size:13px;color:#64748b;margin-top:2px;">${n.message.substring(0,60)}…</div>
+          </a>`).join('')
+      : '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:14px;">No new notifications</div>';
+  } catch(e) {}
+}
+
+function markAllRead() {
+  fetch('/api/notifications/mark-read/', { method: 'POST', headers: { 'X-CSRFToken': getCsrfToken() } })
+    .then(() => { badge.classList.add('d-none'); loadNotifs(); });
+}
+
+function getCsrfToken() {
+  return document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1] || '';
+}
+
+if (bell) {
+  bell.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    const open = dropdown.style.display === 'block';
+    dropdown.style.display = open ? 'none' : 'block';
+    if (!open) loadNotifs();
+  });
+}
+
+document.addEventListener('click', e => {
+  if (dropdown && !dropdown.contains(e.target) && e.target !== bell) dropdown.style.display = 'none';
+});
+
+loadNotifs();
+
+// ── SweetAlert confirm forms ───────────────────
+document.querySelectorAll('[data-swal-confirm]').forEach(el => {
+  el.addEventListener('click', function(e) {
+    e.preventDefault();
+    const msg = this.dataset.swalConfirm;
+    const form = this.closest('form');
+    const href = this.href;
+    Swal.fire({ icon: 'warning', title: 'Are you sure?', text: msg, showCancelButton: true,
+      confirmButtonText: 'Yes, proceed', cancelButtonText: 'Cancel' })
+      .then(r => { if (r.isConfirmed) { if (form) form.submit(); else if (href) window.location.href = href; } });
+  });
+});
+
+// ── Modal helpers ──────────────────────────────
+function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+document.querySelectorAll('.mp-modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.style.display = 'none'; });
+});
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>
