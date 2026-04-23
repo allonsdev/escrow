@@ -35,7 +35,7 @@ class UserAdmin(admin.ModelAdmin):
     list_display = (
         "username", "email", "is_seller",
         "is_verified", "verification_level",
-        "trust_score", "is_flagged"
+        "trust_score", "is_flagged", "is_staff"
     )
 
     list_filter = (
@@ -43,6 +43,7 @@ class UserAdmin(admin.ModelAdmin):
         "is_verified",
         "verification_level",
         "is_flagged",
+        "is_staff",
         "country",
     )
 
@@ -54,6 +55,9 @@ class UserAdmin(admin.ModelAdmin):
         }),
         ("Roles", {
             "fields": ("is_buyer", "is_seller")
+        }),
+        ("Permissions", {
+            "fields": ("is_staff", "is_superuser", "is_active")
         }),
         ("Verification", {
             "fields": ("is_verified", "verification_level")
@@ -260,9 +264,8 @@ class DeliveryAdmin(admin.ModelAdmin):
         "confirmed_by_system",
         "confirmed_at"
     )
-    
-    
-    
+
+
 # ─────────────────────────────────────────────
 #  USER WALLET ADMIN
 # ─────────────────────────────────────────────
@@ -291,9 +294,9 @@ class ProductImageAdmin(admin.ModelAdmin):
 
 @admin.register(StockLog)
 class StockLogAdmin(admin.ModelAdmin):
-    list_display = ("product", "action", "quantity_change", "quantity_before", "quantity_after", "created_at")
+    list_display = ("product", "user", "action", "quantity_change", "quantity_before", "quantity_after", "note", "created_at")
     list_filter = ("action",)
-    search_fields = ("product__name",)
+    search_fields = ("product__name", "note")
 
 
 # ─────────────────────────────────────────────
