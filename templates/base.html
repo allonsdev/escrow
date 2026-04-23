@@ -164,13 +164,24 @@ body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;backgrou
     <li><a class="nav-link" href="{% url 'product_list' %}"><i class="bi bi-grid"></i> Shop</a></li>
 
     {% if request.user.is_authenticated %}
+
+      {# ── STAFF-ONLY ADMIN LINKS (toggle is_staff on/off per user in DB admin) ── #}
       {% if request.user.is_staff %}
-        <li><a class="nav-link" href="{% url 'admin_dashboard' %}">
-          <span class="role-badge role-admin"><i class="bi bi-shield-fill"></i> Admin</span>
-        </a></li>
+        <li>
+          <a class="nav-link" href="{% url 'admin_dashboard' %}">
+            <span class="role-badge role-admin"><i class="bi bi-shield-fill"></i> Admin</span>
+          </a>
+        </li>
+        <li>
+          <a class="nav-link" href="/admin/" target="_blank" title="Django Database Admin">
+            <i class="bi bi-database-gear"></i> DB Admin
+          </a>
+        </li>
         <li><a class="nav-link" href="{% url 'analytics' %}"><i class="bi bi-bar-chart"></i> Analytics</a></li>
         <li><a class="nav-link" href="{% url 'kpi' %}"><i class="bi bi-graph-up-arrow"></i> KPI</a></li>
       {% endif %}
+
+      {# ── SELLER LINK ── #}
       {% if request.user.is_seller %}
         <li><a class="nav-link" href="{% url 'supplier_dashboard' %}">
           <span class="role-badge role-seller"><i class="bi bi-shop"></i> Seller</span>
@@ -198,6 +209,7 @@ body{margin:0;font-family:'Plus Jakarta Sans',sans-serif;font-size:18px;backgrou
       <li><a class="nav-link" href="{% url 'buyer_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
       <li><a class="nav-link" href="{% url 'wallet' %}"><i class="bi bi-person-circle"></i> Account</a></li>
       <li><a class="btn-logout" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+
     {% else %}
       <li><a class="nav-link" href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right"></i> Login</a></li>
       <li><a class="btn-mp btn-mp-primary" href="{% url 'register' %}" style="padding:8px 16px;font-size:14px;"><i class="bi bi-person-plus"></i> Register</a></li>
