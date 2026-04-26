@@ -1,6 +1,39 @@
 {% extends "base.html" %}
 {% block title %}{{ product.name }} — MarketPro{% endblock %}
 
+{% block extra_head %}
+<style>
+/* ── Thumbnail gallery active state ── */
+.thumb-item {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid #dbeafe;
+  aspect-ratio: 1;
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s;
+}
+.thumb-item:hover,
+.thumb-item.active {
+  border-color: #1a56db;
+  box-shadow: 0 0 0 3px rgba(26,86,219,.15);
+}
+.thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Main image swap animation ── */
+#mainProductImage {
+  transition: opacity .2s ease;
+}
+#mainProductImage.fading {
+  opacity: 0;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div style="max-width:1200px;margin:0 auto;padding:24px 1.5rem 4rem;">
 
@@ -10,18 +43,60 @@
 
   <div style="display:grid;grid-template-columns:1fr 1fr 340px;gap:28px;align-items:start;">
 
-    <!-- IMAGE -->
+    <!-- IMAGE GALLERY -->
     <div>
+      {# ── Collect all uploaded images ── #}
+      {% with all_imgs=product.images.all %}
+
+      {# ── Main image ── #}
       <div style="border-radius:16px;overflow:hidden;border:1px solid #dbeafe;background:#f0f7ff;aspect-ratio:4/3;">
-        <img src="https://picsum.photos/600/480?random={{ product.total_views }}" alt="{{ product.name }}" style="width:100%;height:100%;object-fit:cover;display:block;">
+        {% if all_imgs %}
+          <img id="mainProductImage"
+               src="{{ all_imgs.0.image.url }}"
+               alt="{{ product.name }}"
+               style="width:100%;height:100%;object-fit:cover;display:block;">
+        {% else %}
+          <img id="mainProductImage"
+               src="https://picsum.photos/600/480?random={{ product.total_views }}"
+               alt="{{ product.name }}"
+               style="width:100%;height:100%;object-fit:cover;display:block;">
+        {% endif %}
       </div>
+
+      {# ── Thumbnails ── #}
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;">
-        {% for i in "1234" %}
-        <div style="border-radius:10px;overflow:hidden;border:1px solid #dbeafe;aspect-ratio:1;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='#1a56db'" onmouseout="this.style.borderColor='#dbeafe'">
-          <img src="https://picsum.photos/80/80?random={{ product.total_views|add:forloop.counter }}" style="width:100%;height:100%;object-fit:cover;">
-        </div>
-        {% endfor %}
+        {% if all_imgs %}
+          {# Show real uploaded thumbnails (up to 4) #}
+          {% for img in all_imgs|slice:":4" %}
+          <div class="thumb-item {% if forloop.first %}active{% endif %}"
+               onclick="swapImage('{{ img.image.url }}', this)">
+            <img src="{{ img.image.url }}" alt="{{ product.name }} image {{ forloop.counter }}">
+          </div>
+          {% endfor %}
+          {# Pad remaining slots with placeholders if fewer than 4 images #}
+          {% if all_imgs.count < 4 %}
+            {% with remaining=all_imgs.count %}
+              {% for i in "1234"|slice:remaining %}
+              <div class="thumb-item" style="opacity:.4;cursor:default;">
+                <img src="https://picsum.photos/80/80?random={{ product.total_views|add:forloop.counter }}"
+                     alt="No image">
+              </div>
+              {% endfor %}
+            {% endwith %}
+          {% endif %}
+        {% else %}
+          {# No uploaded images — show 4 random placeholders #}
+          {% for i in "1234" %}
+          <div class="thumb-item {% if forloop.first %}active{% endif %}"
+               onclick="swapImage('https://picsum.photos/600/480?random={{ product.total_views|add:forloop.counter }}', this)">
+            <img src="https://picsum.photos/80/80?random={{ product.total_views|add:forloop.counter }}"
+                 alt="Product image {{ forloop.counter }}">
+          </div>
+          {% endfor %}
+        {% endif %}
       </div>
+
+      {% endwith %}
     </div>
 
     <!-- DETAILS -->
@@ -247,7 +322,17 @@
           {% for rp in related %}
           <a href="{% url 'product_detail' rp.id %}" style="display:flex;gap:14px;align-items:center;text-decoration:none;padding:12px;border-radius:12px;border:1px solid #f0f7ff;transition:all .2s;" onmouseover="this.style.borderColor='#dbeafe';this.style.background='#f8faff'" onmouseout="this.style.borderColor='#f0f7ff';this.style.background=''">
             <div style="width:60px;height:60px;border-radius:10px;overflow:hidden;flex-shrink:0;background:#f0f7ff;">
-              <img src="https://picsum.photos/60/60?random={{ rp.total_views|add:forloop.counter }}" style="width:100%;height:100%;object-fit:cover;">
+              {# ── Show uploaded image or fall back to placeholder ── #}
+              {% if rp.primary_image %}
+                <img src="{{ rp.primary_image }}"
+                     alt="{{ rp.name }}"
+                     style="width:100%;height:100%;object-fit:cover;"
+                     onerror="this.src='https://picsum.photos/60/60?random={{ rp.total_views|add:forloop.counter }}'">
+              {% else %}
+                <img src="https://picsum.photos/60/60?random={{ rp.total_views|add:forloop.counter }}"
+                     alt="{{ rp.name }}"
+                     style="width:100%;height:100%;object-fit:cover;">
+              {% endif %}
             </div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ rp.name }}</div>
@@ -359,6 +444,23 @@ const currency  = "{{ product.currency }}";
 const maxQty    = parseInt("{{ product.quantity_available }}");
 const productId = "{{ product.id }}";
 
+// ── THUMBNAIL IMAGE SWAP ───────────────────────
+function swapImage(src, thumbEl) {
+  const main = document.getElementById('mainProductImage');
+
+  // Fade out
+  main.classList.add('fading');
+  setTimeout(() => {
+    main.src = src;
+    main.classList.remove('fading');
+  }, 200);
+
+  // Update active thumb
+  document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+  if (thumbEl) thumbEl.classList.add('active');
+}
+
+// ── CHECKOUT ──────────────────────────────────
 function openCheckout() {
   new bootstrap.Modal(document.getElementById('checkoutModal')).show();
 }
@@ -371,6 +473,7 @@ function changeModalQty(delta) {
   document.getElementById('checkoutTotal').textContent = (unitPrice * val).toFixed(4) + ' ' + currency;
 }
 
+// ── ADD TO CART ───────────────────────────────
 function addToCartDetail() {
   fetch(`/cart/add/${productId}/`, {
     method: 'POST',
@@ -394,7 +497,7 @@ function getCsrfToken() {
   return document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='))?.split('=')[1] || '';
 }
 
-// Star rating
+// ── STAR RATING ───────────────────────────────
 let currentRating = 5;
 function hoverStars(n) {
   document.querySelectorAll('#starRating span').forEach((s,i) => {

@@ -92,6 +92,14 @@
 /* Search Loading Indicator */
 .search-loading { display: none; position: absolute; right: 56px; top: 50%; transform: translateY(-50%); color: var(--mp-blue); }
 
+/* Product image placeholder */
+.pc-img-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #f0f7ff 0%, #dbeafe 100%);
+  color: #93c5fd; font-size: 48px;
+}
+
 @media (max-width: 900px) {
   .shop-body { grid-template-columns: 1fr; }
 }
@@ -229,7 +237,14 @@
       {% for product in page_obj %}
       <div class="pc" onclick="window.location='{% url 'product_detail' product.id %}'">
         <div class="pc-img">
-          <img src="https://picsum.photos/400/300?random={{ forloop.counter0|add:product.total_purchases }}" alt="{{ product.name }}" loading="lazy">
+          {# ── Show uploaded images first; fall back to random placeholder ── #}
+          {% with primary_img=product.primary_image %}
+            {% if primary_img %}
+              <img src="{{ primary_img }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+              <img src="https://picsum.photos/400/300?random={{ forloop.counter0|add:product.total_purchases }}" alt="{{ product.name }}" loading="lazy">
+            {% endif %}
+          {% endwith %}
           <div class="pc-badges">
             {% if product.is_featured %}<span class="mp-badge badge-blue" style="font-size:10px;"><i class="bi bi-star-fill"></i> Featured</span>{% endif %}
             {% if product.is_low_stock and not product.is_out_of_stock %}<span class="mp-badge badge-yellow" style="font-size:10px;">Low Stock</span>{% endif %}
@@ -345,7 +360,9 @@ searchInput.addEventListener('input', function() {
           <a href="/product/${p.id}/" style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #f0f7ff;text-decoration:none;transition:background .15s;"
              onmouseover="this.style.background='#f8faff'" onmouseout="this.style.background=''">
             <div style="width:40px;height:40px;background:#f0f7ff;border-radius:8px;flex-shrink:0;overflow:hidden;">
-              <img src="https://picsum.photos/40/40?random=${p.id.slice(0,5)}" style="width:100%;height:100%;object-fit:cover;">
+              <img src="${p.primary_image || 'https://picsum.photos/40/40?random=' + p.id.slice(0,5)}"
+                   style="width:100%;height:100%;object-fit:cover;"
+                   onerror="this.src='https://picsum.photos/40/40?random=${p.id.slice(0,5)}'">
             </div>
             <div style="flex:1;min-width:0;">
               <div style="font-size:14px;font-weight:700;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
@@ -406,7 +423,6 @@ function addToCart(productId, name) {
       Swal.fire({ icon: 'warning', title: data.error, toast: true, position: 'top-end', timer: 2500, showConfirmButton: false });
       return;
     }
-    // Update cart icon count
     const countEl = document.getElementById('navCartCount');
     if (countEl) { countEl.textContent = data.cart_count; countEl.classList.remove('d-none'); }
     Swal.fire({
@@ -429,7 +445,7 @@ function refreshCart() {
     const footer = document.getElementById('cartFooter');
     const countBadge = document.getElementById('cartCountBadge');
     const navCount = document.getElementById('navCartCount');
-    
+
     if (countBadge) countBadge.textContent = data.count;
     if (navCount) {
       navCount.textContent = data.count;
@@ -443,7 +459,9 @@ function refreshCart() {
       body.innerHTML = data.items.map(item => `
         <div class="cart-item">
           <div class="cart-item-img">
-            <img src="https://picsum.photos/64/64?random=${item.id.slice(0,4)}" alt="${item.name}">
+            <img src="${item.primary_image || 'https://picsum.photos/64/64?random=' + item.id.slice(0,4)}"
+                 alt="${item.name}"
+                 onerror="this.src='https://picsum.photos/64/64?random=${item.id.slice(0,4)}'">
           </div>
           <div class="cart-item-info">
             <div class="cart-item-name">${item.name}</div>
@@ -460,7 +478,7 @@ function refreshCart() {
       `).join('');
 
       document.getElementById('cartTotalAmount').textContent = data.total + ' ETH';
-      document.getElementById('cartCheckoutBtns').innerHTML = data.items.map(item => 
+      document.getElementById('cartCheckoutBtns').innerHTML = data.items.map(item =>
         `<a href="/checkout/${item.id}/" class="btn-mp btn-mp-primary" style="width:100%;justify-content:center;font-size:15px;padding:13px;margin-bottom:6px;">
           <i class="bi bi-lightning-charge"></i> Checkout ${item.name.substring(0,20)}${item.name.length > 20 ? '…' : ''}
         </a>`

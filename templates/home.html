@@ -23,7 +23,6 @@ body {
     background: var(--ink);
     color: var(--white);
     overflow-x: hidden;
-
     line-height: 1.6;
     letter-spacing: 0.02em;
 }
@@ -40,7 +39,6 @@ body {
   overflow: hidden; background: var(--ink);
 }
 
-/* Gradient mesh behind everything */
 .hero-mesh {
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background:
@@ -94,9 +92,7 @@ body {
 }
 
 /* ─── BOBBING GEO SHAPES ─── */
-.geo {
-  position: absolute; pointer-events: none; z-index: 2; opacity: 0.18;
-}
+.geo { position: absolute; pointer-events: none; z-index: 2; opacity: 0.18; }
 .geo-tri {
   width: 0; height: 0;
   border-left: 28px solid transparent; border-right: 28px solid transparent;
@@ -250,7 +246,6 @@ body {
 }
 .section-sub { font-size: 16px; color: var(--slate); margin-top: 8px; line-height: 1.6; }
 
-/* Full-width slider track */
 .slider-track-outer {
   position: relative;
   overflow: hidden;
@@ -282,12 +277,8 @@ body {
   border: 1px solid rgba(255,255,255,.08);
 }
 .cat-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 28px 56px rgba(0,0,0,.50); }
-
-/* Large card */
 .cat-card.lg { width: 420px; height: 480px; }
-/* Medium */
 .cat-card.md { width: 300px; height: 480px; }
-/* Tall narrow */
 .cat-card.sm { width: 240px; height: 480px; }
 
 .cat-bg-img {
@@ -326,7 +317,6 @@ body {
   transition: background .2s;
 }
 .cat-card:hover .cat-pill { background: rgba(56,189,248,.25); border-color: rgba(56,189,248,.40); }
-
 .cat-badge {
   position: absolute; top: 16px; left: 16px;
   background: rgba(56,189,248,.15); border: 1px solid rgba(56,189,248,.35);
@@ -335,7 +325,6 @@ body {
   backdrop-filter: blur(8px);
 }
 
-/* Slider nav dots */
 .slider-nav {
   display: flex; justify-content: center; gap: 8px; margin-top: 20px; padding: 0 5vw;
 }
@@ -362,8 +351,30 @@ body {
   background: rgba(255,255,255,.07); border-color: rgba(56,189,248,.25);
   transform: translateY(-4px); box-shadow: 0 20px 48px rgba(0,0,0,.40);
 }
-.fp-img { height: 200px; overflow: hidden; position: relative; background: rgba(255,255,255,.03); }
-.fp-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+.fp-img {
+  height: 200px; overflow: hidden; position: relative;
+  background: rgba(255,255,255,.03);
+  /* Dark placeholder gradient shown while image loads or when missing */
+  background-image: linear-gradient(135deg, rgba(26,86,219,.15) 0%, rgba(14,165,233,.10) 100%);
+}
+.fp-img img {
+  width: 100%; height: 100%; object-fit: cover; transition: transform .4s;
+  /* Hide broken-image icon on load error */
+}
+.fp-img img.no-image {
+  display: none;
+}
+.fp-img-placeholder {
+  display: none; /* shown via JS when img errors */
+  position: absolute; inset: 0;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px;
+  color: rgba(56,189,248,.40); font-size: 36px;
+}
+.fp-img-placeholder span {
+  font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(148,163,184,.50);
+}
 .fp-card:hover .fp-img img { transform: scale(1.07); }
 .fp-tag {
   position: absolute; top: 10px; left: 10px;
@@ -450,20 +461,15 @@ body {
 ════════════════════════════════════════════ -->
 <section class="hero-wrap">
 
-  <!-- Particles -->
   <div id="particles-js"></div>
-
-  <!-- Gradient mesh -->
   <div class="hero-mesh"></div>
 
-  <!-- Bobbing spheres -->
   <div class="sphere sphere-1"></div>
   <div class="sphere sphere-2"></div>
   <div class="sphere sphere-3"></div>
   <div class="sphere sphere-4"></div>
   <div class="sphere sphere-5"></div>
 
-  <!-- Bobbing geo shapes -->
   <div class="geo geo-tri"></div>
   <div class="geo geo-ring"></div>
   <div class="geo geo-sq"></div>
@@ -471,8 +477,6 @@ body {
 
   <!-- Blockchain SVG Network -->
   <svg class="blockchain-canvas" viewBox="0 0 700 800" fill="none" xmlns="http://www.w3.org/2000/svg" id="blockchainSvg">
-    <!-- Grid dots (nodes) -->
-    <!-- Connections drawn by JS below; static fallback defined in SVG -->
     <g id="bc-lines" stroke="rgba(56,189,248,0.20)" stroke-width="1">
       <line x1="120" y1="120" x2="300" y2="200"/>
       <line x1="300" y1="200" x2="500" y2="130"/>
@@ -492,7 +496,6 @@ body {
       <line x1="500" y1="550" x2="560" y2="700"/>
       <line x1="200" y1="720" x2="560" y2="700"/>
     </g>
-    <!-- Animated pulse lines -->
     <g id="bc-pulses">
       <line x1="300" y1="200" x2="400" y2="380" stroke="rgba(56,189,248,0.55)" stroke-width="1.5" stroke-dasharray="8 6">
         <animate attributeName="stroke-dashoffset" from="0" to="-28" dur="1.4s" repeatCount="indefinite"/>
@@ -504,10 +507,7 @@ body {
         <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.8s" repeatCount="indefinite"/>
       </line>
     </g>
-    <!-- Nodes (hexagon blocks) -->
     <g id="bc-nodes">
-      <!-- Each node: outer glow circle + inner hex -->
-      <!-- Node 1 -->
       <circle cx="300" cy="200" r="22" fill="rgba(26,86,219,0.20)" stroke="rgba(56,189,248,0.45)" stroke-width="1.5">
         <animate attributeName="r" values="22;26;22" dur="3s" repeatCount="indefinite"/>
         <animate attributeName="opacity" values="1;0.7;1" dur="3s" repeatCount="indefinite"/>
@@ -515,14 +515,12 @@ body {
       <polygon points="300,188 310,194 310,206 300,212 290,206 290,194" fill="rgba(26,86,219,0.55)" stroke="rgba(56,189,248,0.80)" stroke-width="1"/>
       <text x="300" y="204" text-anchor="middle" fill="#bae6fd" font-size="7" font-family="monospace">0x1A</text>
 
-      <!-- Node 2 -->
       <circle cx="500" cy="130" r="18" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.35)" stroke-width="1.5">
         <animate attributeName="r" values="18;22;18" dur="4s" repeatCount="indefinite" begin="0.5s"/>
       </circle>
       <polygon points="500,120 508,125 508,135 500,140 492,135 492,125" fill="rgba(14,165,233,0.40)" stroke="rgba(56,189,248,0.70)" stroke-width="1"/>
       <text x="500" y="133" text-anchor="middle" fill="#bae6fd" font-size="6" font-family="monospace">BLK</text>
 
-      <!-- Node 3 -->
       <circle cx="400" cy="380" r="26" fill="rgba(26,86,219,0.25)" stroke="rgba(99,102,241,0.55)" stroke-width="1.5">
         <animate attributeName="r" values="26;30;26" dur="2.5s" repeatCount="indefinite" begin="1s"/>
         <animate attributeName="opacity" values="1;0.8;1" dur="2.5s" repeatCount="indefinite" begin="1s"/>
@@ -530,48 +528,40 @@ body {
       <polygon points="400,366 412,373 412,387 400,394 388,387 388,373" fill="rgba(26,86,219,0.60)" stroke="rgba(99,102,241,0.85)" stroke-width="1.5"/>
       <text x="400" y="384" text-anchor="middle" fill="#e0e7ff" font-size="7" font-family="monospace">0x3F</text>
 
-      <!-- Node 4 -->
       <circle cx="580" cy="300" r="16" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.35)" stroke-width="1">
         <animate attributeName="r" values="16;20;16" dur="5s" repeatCount="indefinite" begin="0.8s"/>
       </circle>
       <polygon points="580,292 587,296 587,304 580,308 573,304 573,296" fill="rgba(14,165,233,0.35)" stroke="rgba(56,189,248,0.65)" stroke-width="1"/>
 
-      <!-- Node 5 -->
       <circle cx="200" cy="420" r="20" fill="rgba(26,86,219,0.20)" stroke="rgba(56,189,248,0.40)" stroke-width="1.5">
         <animate attributeName="r" values="20;24;20" dur="3.5s" repeatCount="indefinite" begin="1.5s"/>
       </circle>
       <polygon points="200,410 208,415 208,425 200,430 192,425 192,415" fill="rgba(26,86,219,0.50)" stroke="rgba(56,189,248,0.75)" stroke-width="1"/>
 
-      <!-- Node 6 -->
       <circle cx="300" cy="600" r="18" fill="rgba(14,165,233,0.15)" stroke="rgba(56,189,248,0.35)" stroke-width="1">
         <animate attributeName="r" values="18;22;18" dur="4s" repeatCount="indefinite" begin="2s"/>
       </circle>
       <polygon points="300,591 308,596 308,606 300,611 292,606 292,596" fill="rgba(14,165,233,0.40)" stroke="rgba(56,189,248,0.65)" stroke-width="1"/>
 
-      <!-- Node 7 -->
       <circle cx="120" cy="120" r="15" fill="rgba(99,102,241,0.15)" stroke="rgba(99,102,241,0.40)" stroke-width="1">
         <animate attributeName="r" values="15;19;15" dur="3.8s" repeatCount="indefinite" begin="0.3s"/>
       </circle>
       <polygon points="120,113 126,116.5 126,123.5 120,127 114,123.5 114,116.5" fill="rgba(99,102,241,0.40)" stroke="rgba(99,102,241,0.70)" stroke-width="1"/>
 
-      <!-- Node 8 -->
       <circle cx="500" cy="550" r="20" fill="rgba(26,86,219,0.20)" stroke="rgba(56,189,248,0.40)" stroke-width="1.5">
         <animate attributeName="r" values="20;24;20" dur="4.5s" repeatCount="indefinite" begin="0.7s"/>
       </circle>
       <polygon points="500,540 508,545 508,555 500,560 492,555 492,545" fill="rgba(26,86,219,0.50)" stroke="rgba(56,189,248,0.75)" stroke-width="1"/>
 
-      <!-- Node 9 / Central hash -->
       <circle cx="60" cy="300" r="13" fill="rgba(14,165,233,0.12)" stroke="rgba(56,189,248,0.30)" stroke-width="1"/>
       <polygon points="60,293 66,297 66,303 60,307 54,303 54,297" fill="rgba(14,165,233,0.30)" stroke="rgba(56,189,248,0.55)" stroke-width="1"/>
 
-      <!-- Floating hash labels -->
       <text x="320" y="170" fill="rgba(148,163,184,0.55)" font-size="9" font-family="monospace">hash: 0xa8f3...</text>
       <text x="420" y="360" fill="rgba(148,163,184,0.50)" font-size="8" font-family="monospace">nonce: 4821</text>
       <text x="210" y="450" fill="rgba(148,163,184,0.45)" font-size="8" font-family="monospace">prev: 0x3c1...</text>
       <text x="310" y="630" fill="rgba(148,163,184,0.45)" font-size="8" font-family="monospace">tx: 12 | gas: 21k</text>
     </g>
 
-    <!-- Travelling packet dots -->
     <circle r="3" fill="#38bdf8" opacity="0.9">
       <animateMotion dur="2.8s" repeatCount="indefinite" begin="0s">
         <mpath href="#path1"/>
@@ -640,7 +630,20 @@ body {
 
         {% for cat in categories %}
         <a href="{% url 'product_list' %}?category={{ cat.slug }}" class="cat-card {% cycle 'lg' 'md' 'sm' 'md' 'lg' 'sm' %}">
-          <div class="cat-bg-img" style="background-image:url('https://picsum.photos/600/800?random={{ forloop.counter|add:10 }}');background-color:#1e3a5f;"></div>
+          {#
+            Category background: try the first product image in this category,
+            then the category's own image field (if you add one later),
+            then fall back to a picsum placeholder.
+          #}
+          {% with first_product=cat.products.filter %}
+            {% with cat_img=cat.products.first %}
+              {% if cat_img and cat_img.primary_image %}
+                <div class="cat-bg-img" style="background-image:url('{{ cat_img.primary_image }}');background-color:#1e3a5f;"></div>
+              {% else %}
+                <div class="cat-bg-img" style="background-image:url('https://picsum.photos/600/800?random={{ forloop.counter|add:10 }}');background-color:#1e3a5f;"></div>
+              {% endif %}
+            {% endwith %}
+          {% endwith %}
           <div class="cat-overlay"></div>
           <div class="cat-overlay-top"></div>
           <div class="cat-badge">{{ cat.products.count }} items</div>
@@ -651,7 +654,6 @@ body {
           </div>
         </a>
         {% empty %}
-        <!-- Fallback cards -->
         {% for entry in "electronics,fashion,art,gaming,home,sports"|split:"," %}
         <a href="{% url 'product_list' %}" class="cat-card {% cycle 'lg' 'md' 'sm' 'md' 'lg' 'sm' %}">
           <div class="cat-bg-img" style="background-image:url('https://picsum.photos/600/800?random={{ forloop.counter|add:10 }}');background-color:#1e3a5f;"></div>
@@ -665,19 +667,12 @@ body {
           </div>
         </a>
         {% endfor %}
-        <!-- Static fallback if template tag not available -->
-        <a href="{% url 'product_list' %}" class="cat-card lg" style="display:none" id="fb1">
-          <div class="cat-bg-img" style="background-image:url('https://picsum.photos/600/800?random=11');"></div>
-          <div class="cat-overlay"></div><div class="cat-overlay-top"></div>
-          <div class="cat-badge">24 items</div>
-          <div class="cat-label"><h3>Electronics</h3><div class="cat-count">Explore collection</div><span class="cat-pill">Shop Now →</span></div>
-        </a>
         {% endfor %}
+
       </div>
     </div>
   </div>
 
-  <!-- Nav dots -->
   <div class="slider-nav" id="sliderDots"></div>
 </section>
 
@@ -697,8 +692,26 @@ body {
     {% for product in featured %}
     <a href="{% url 'product_detail' product.id %}" class="fp-card">
       <div class="fp-img">
-        <img src="https://picsum.photos/400/300?random={{ forloop.counter|add:30 }}" alt="{{ product.name }}">
-        {% if product.is_featured %}<div class="fp-tag"><i class="bi bi-star-fill"></i> Featured</div>{% endif %}
+        {# ── Show uploaded image first; onerror swaps to placeholder icon ── #}
+        {% if product.primary_image %}
+          <img
+            src="{{ product.primary_image }}"
+            alt="{{ product.name }}"
+            onerror="this.classList.add('no-image');this.nextElementSibling.style.display='flex';">
+        {% else %}
+          <img
+            src="https://picsum.photos/400/300?random={{ forloop.counter|add:30 }}"
+            alt="{{ product.name }}"
+            onerror="this.classList.add('no-image');this.nextElementSibling.style.display='flex';">
+        {% endif %}
+        {# Shown only if image fails to load #}
+        <div class="fp-img-placeholder">
+          <i class="bi bi-image"></i>
+          <span>No Image</span>
+        </div>
+        {% if product.is_featured %}
+          <div class="fp-tag"><i class="bi bi-star-fill"></i> Featured</div>
+        {% endif %}
       </div>
       <div class="fp-body">
         {% if product.category %}<div class="fp-cat">{{ product.category.name }}</div>{% endif %}
@@ -706,15 +719,22 @@ body {
         <div class="fp-seller">by {{ product.seller.username }}{% if product.shop %} · {{ product.shop.name }}{% endif %}</div>
         <div class="fp-footer">
           <div class="fp-price">{{ product.price }} <span>{{ product.currency }}</span></div>
-          <div class="fp-stars">{% for i in "12345" %}{% if forloop.counter <= product.avg_rating %}★{% else %}<span style="opacity:.3;">★</span>{% endif %}{% endfor %}</div>
+          <div class="fp-stars">
+            {% for i in "12345" %}
+              {% if forloop.counter <= product.avg_rating %}★{% else %}<span style="opacity:.3;">★</span>{% endif %}
+            {% endfor %}
+          </div>
         </div>
       </div>
     </a>
     {% empty %}
+    {# Fallback placeholder cards when no featured products exist #}
     {% for i in "1234" %}
     <a href="{% url 'product_list' %}" class="fp-card">
       <div class="fp-img">
-        <img src="https://picsum.photos/400/300?random={{ forloop.counter|add:40 }}" alt="Product">
+        <img src="https://picsum.photos/400/300?random={{ forloop.counter|add:40 }}" alt="Product"
+             onerror="this.classList.add('no-image');this.nextElementSibling.style.display='flex';">
+        <div class="fp-img-placeholder"><i class="bi bi-image"></i><span>No Image</span></div>
         <div class="fp-tag"><i class="bi bi-star-fill"></i> Featured</div>
       </div>
       <div class="fp-body">
@@ -742,10 +762,26 @@ body {
     <p style="font-size:16px;color:var(--slate);text-align:center;max-width:480px;margin:10px auto 0;line-height:1.6;">Four simple steps — blockchain secured at every stage</p>
   </div>
   <div class="hiw-steps">
-    <div class="hiw-step"><div class="hiw-num">1</div><div class="hiw-title">Browse &amp; Buy</div><p class="hiw-desc">Find the product you want and click "Buy Now". Choose your quantity and proceed to checkout.</p></div>
-    <div class="hiw-step"><div class="hiw-num">2</div><div class="hiw-title">Fund Escrow</div><p class="hiw-desc">Your payment is locked in a blockchain smart contract — the seller can't access it yet.</p></div>
-    <div class="hiw-step"><div class="hiw-num">3</div><div class="hiw-title">Seller Ships</div><p class="hiw-desc">The seller ships your order with a tracking number. You'll get notified every step of the way.</p></div>
-    <div class="hiw-step"><div class="hiw-num">4</div><div class="hiw-title">Confirm &amp; Release</div><p class="hiw-desc">Confirm delivery and funds automatically release to the seller. Dispute if something's wrong.</p></div>
+    <div class="hiw-step">
+      <div class="hiw-num">1</div>
+      <div class="hiw-title">Browse &amp; Buy</div>
+      <p class="hiw-desc">Find the product you want and click "Buy Now". Choose your quantity and proceed to checkout.</p>
+    </div>
+    <div class="hiw-step">
+      <div class="hiw-num">2</div>
+      <div class="hiw-title">Fund Escrow</div>
+      <p class="hiw-desc">Your payment is locked in a blockchain smart contract — the seller can't access it yet.</p>
+    </div>
+    <div class="hiw-step">
+      <div class="hiw-num">3</div>
+      <div class="hiw-title">Seller Ships</div>
+      <p class="hiw-desc">The seller ships your order with a tracking number. You'll get notified every step of the way.</p>
+    </div>
+    <div class="hiw-step">
+      <div class="hiw-num">4</div>
+      <div class="hiw-title">Confirm &amp; Release</div>
+      <p class="hiw-desc">Confirm delivery and funds automatically release to the seller. Dispute if something's wrong.</p>
+    </div>
   </div>
 </section>
 
@@ -817,7 +853,7 @@ particlesJS('particles-js', {
     scrollLeft = vp.scrollLeft;
   });
   vp.addEventListener('mouseleave', () => { isDown = false; vp.classList.remove('dragging'); });
-  vp.addEventListener('mouseup', () => { isDown = false; vp.classList.remove('dragging'); });
+  vp.addEventListener('mouseup',    () => { isDown = false; vp.classList.remove('dragging'); });
   vp.addEventListener('mousemove', e => {
     if (!isDown) return;
     e.preventDefault();
@@ -828,13 +864,13 @@ particlesJS('particles-js', {
   // Touch
   let tStart;
   vp.addEventListener('touchstart', e => { tStart = e.touches[0].clientX; scrollLeft = vp.scrollLeft; }, { passive: true });
-  vp.addEventListener('touchmove', e => {
+  vp.addEventListener('touchmove',  e => {
     const dx = tStart - e.touches[0].clientX;
     vp.scrollLeft = scrollLeft + dx;
   }, { passive: true });
 
   // Dots
-  const track = document.getElementById('catTrack');
+  const track  = document.getElementById('catTrack');
   const dotsEl = document.getElementById('sliderDots');
   if (track && dotsEl) {
     const cards = track.querySelectorAll('.cat-card');

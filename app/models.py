@@ -179,6 +179,21 @@ class Product(models.Model):
     @property
     def is_out_of_stock(self):
         return self.quantity_available <= 0
+    
+    @property
+    def primary_image(self):
+        def safe_url(img):
+            try:
+                return img.image.url if img and img.image else None
+            except ValueError:
+                return None
+
+        img = self.images.filter(is_primary=True).first()
+        url = safe_url(img)
+        if url:
+            return url
+        first = self.images.first()
+        return safe_url(first)
 
     def __str__(self):
         return self.name
